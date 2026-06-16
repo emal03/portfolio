@@ -1,416 +1,199 @@
-// src/app/about/page.tsx
-'use client';
+import Image from "next/image";
+import Link from "next/link";
+import { neon } from "@neondatabase/serverless";
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { motion } from 'framer-motion';
-import {
-    FiDownload,
-    FiArrowRight,
-    FiBookOpen,
-    FiCpu,
-    FiEye,
-    FiShield,
-    FiActivity,
-    FiTarget
-} from 'react-icons/fi';
-import Card from '@/components/ui/Card';
+const sql = neon(process.env.NEXT_PUBLIC_DATABASE_URL!);
+type Row = Record<string, unknown>;
 
-interface Certification {
-    id: string;
-    title: string;
-    issuer: string;
-    date_issued: string;
-    credential_url?: string;
-    image_url?: string;
-}
+export default async function AboutPage() {
+  let settings: Record<string, string> = {};
+  let certifications: Row[] = [];
+  let skills: Row[] = [];
 
-export default function AboutPage() {
-    const [certifications, setCertifications] = useState<Certification[]>([]);
-    const [loading, setLoading] = useState(true);
+  try {
+    const rows = await sql`SELECT key, value FROM settings`;
+    rows.forEach((r: Row) => { settings[r.key as string] = r.value as string; });
+  } catch (e) { console.error("Settings error:", e); }
 
-    const [profile, setProfile] = useState({
-        name: '',
-        title: '',
-        bio: '',
-        profile_photo: '/profile.jpg',
-        cv_url: '/cv.pdf',
-        scholarship: '',
-    });
+  try {
+    certifications = await sql`SELECT * FROM certifications ORDER BY display_order ASC, year DESC`;
+  } catch (e) { console.error("Certifications error:", e); }
 
-    const [aboutContent, setAboutContent] = useState({
-        headline: '',
-        introduction: '',
-        education: [] as { degree: string; institution: string; year: string }[],
-    });
+  try {
+    skills = await sql`SELECT * FROM skills ORDER BY category, display_order`;
+  } catch (e) { console.error("Skills error:", e); }
 
-    useEffect(() => {
-        const fetchPortfolioData = async () => {
-            try {
-                const res = await fetch('/api/portfolio');
-                if (!res.ok) return;
-                const data = await res.json();
+  const name        = settings.name        || "Emal Kamawal";
+  const title       = settings.title       || "Data Scientist & ML Researcher";
+  const bio         = settings.bio         || "Passionate about transforming raw data into actionable knowledge.";
+  const university  = settings.university  || "Pak-Austria Fachhochschule (PAF-IAST)";
+  const degree      = settings.degree      || "Bachelor of Science in Computer Science";
+  const univYears   = settings.university_years || "2022 - 2026";
+  const scholarship = settings.scholarship || "";
+  const profileImg  = settings.profile_photo || "/profile.png";
+  const github      = settings.github      || "https://github.com/emal03";
+  const linkedin    = settings.linkedin    || "#";
+  const email       = settings.email       || "emalkamawal01@gmail.com";
+  const cvUrl       = settings.cv_url      || "/cv.pdf";
 
-                if (data.certifications && data.certifications.length > 0) {
-                    setCertifications(data.certifications.map((c: any) => ({
-                        id: c.id,
-                        title: c.title,
-                        issuer: c.issuer,
-                        date_issued: c.year ? String(c.year) : '',
-                        credential_url: c.credential_url || '',
-                        image_url: c.image_url || '',
-                    })));
-                }
+  const skillCategories = skills.reduce((acc: Record<string, Row[]>, skill: Row) => {
+    const cat = (skill.category as string) || "General";
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(skill);
+    return acc;
+  }, {});
 
-                if (data.settings) {
-                    setProfile({
-                        name: data.settings.name || '',
-                        title: data.settings.title || '',
-                        bio: data.settings.bio || '',
-                        profile_photo: '/profile.jpg',
-                        cv_url: data.settings.cv_url || '/cv.pdf',
-                        scholarship: data.settings.scholarship || '',
-                    });
+  return (
+    <main id="main-content" className="min-h-screen" style={{ background: "var(--bg-primary)" }}>
 
-                    setAboutContent({
-                        headline: data.settings.title || '',
-                        introduction: data.settings.bio || '',
-                        education: data.settings.university ? [
-                            {
-                                degree: data.settings.degree || 'Bachelor of Science in Computer Science',
-                                institution: data.settings.university || 'Pak-Austria Fachhochschule (PAF-IAST)',
-                                year: data.settings.university_years || '2022 - 2026'
-                            }
-                        ] : [],
-                    });
-                }
-            } catch (e) {
-                console.error('Error fetching about page data:', e);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchPortfolioData();
-    }, []);
+      {/* Hero */}
+      <section className="py-20 px-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex flex-col md:flex-row gap-12 items-center">
 
-    const fadeInUp = {
-        initial: { opacity: 0, y: 20 },
-        whileInView: { opacity: 1, y: 0 },
-        viewport: { once: true },
-        transition: { duration: 0.5 }
-    };
-
-    const staggerContainer = {
-        hidden: { opacity: 0 },
-        show: {
-            opacity: 1,
-            transition: { staggerChildren: 0.1 }
-        }
-    };
-
-    const staggerItem = {
-        hidden: { opacity: 0, y: 15 },
-        show: { opacity: 1, y: 0, transition: { duration: 0.4 } }
-    };
-
-    const researchInterests = [
-        { icon: <FiTarget />, label: 'Machine Learning', color: 'blue' },
-        { icon: <FiActivity />, label: 'Data Science', color: 'purple' },
-        { icon: <FiEye />, label: 'Computer Vision', color: 'cyan' },
-        { icon: <FiBookOpen />, label: 'Medical Data Analysis', color: 'emerald' },
-        { icon: <FiCpu />, label: 'Bioinformatics', color: 'amber' },
-        { icon: <FiShield />, label: 'Deep Learning', color: 'rose' },
-    ];
-
-    const futureDirections = [
-        {
-            title: 'Clinical AI Deployment',
-            description: 'Working towards building AI systems that can be safely and ethically deployed in clinical settings for real-world patient impact.',
-        },
-        {
-            title: 'Neural Signal Decoding',
-            description: 'Advancing brain-computer interface research to help patients with motor disabilities communicate and control devices.',
-        },
-        {
-            title: 'Privacy-First Healthcare AI',
-            description: 'Developing federated learning solutions that enable multi-institutional collaboration without compromising patient privacy.',
-        },
-    ];
-
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center min-h-screen bg-bg-primary">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-blue" />
+            {/* Photo */}
+            <div className="relative flex-shrink-0">
+              <div className="w-48 h-48 rounded-2xl overflow-hidden border-2"
+                   style={{ borderColor: "var(--accent-blue)", boxShadow: "0 0 40px rgba(59,130,246,0.3)" }}>
+                <Image src={profileImg} alt={name} width={192} height={192}
+                       className="w-full h-full object-cover" priority unoptimized />
+              </div>
+              <div className="absolute -bottom-3 -right-3 px-3 py-1 rounded-full text-xs font-semibold"
+                   style={{ background: "var(--accent-gradient)", color: "white" }}>
+                {settings.availability || "Open to Work"}
+              </div>
             </div>
-        );
-    }
 
-    return (
-        <div className="min-h-screen bg-bg-primary">
-            {/* Hero Section */}
-            <section className="relative py-24 overflow-hidden">
-                {/* Background */}
-                <div className="absolute inset-0 bg-grid-fade opacity-40" />
-                <div className="absolute top-0 right-0 w-96 h-96 bg-purple-500/10 rounded-full blur-[120px]" />
-
-                <div className="container mx-auto px-6 relative z-10">
-                    <div className="grid lg:grid-cols-[400px_1fr] gap-12 lg:gap-16 items-start">
-                        {/* Profile Image */}
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ duration: 0.6 }}
-                            className="relative mx-auto lg:mx-0"
-                        >
-                            <div className="relative w-80 lg:w-full aspect-[3/4] rounded-2xl overflow-hidden">
-                                {/* Gradient Border */}
-                                <div className="absolute inset-0 bg-gradient-to-br from-accent-blue via-purple-500 to-accent-cyan rounded-2xl" />
-                                <div className="absolute inset-[3px] rounded-2xl overflow-hidden bg-bg-primary relative">
-                                    <Image
-                                        src={profile.profile_photo || '/profile.jpg'}
-                                        alt={profile.name || 'Emal Kamawal'}
-                                        fill
-                                        sizes="(max-width: 1024px) 320px, 400px"
-                                        className="object-cover"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Floating Card */}
-                            {profile.scholarship && (
-                                <motion.div
-                                    className="absolute -bottom-6 -right-6 p-4 rounded-xl bg-bg-card border border-border-light shadow-xl"
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.4 }}
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center text-success">
-                                            🎓
-                                        </div>
-                                        <div>
-                                            <p className="font-semibold text-text-primary text-sm">HEC Scholar</p>
-                                            <p className="text-[10px] text-text-muted">{profile.scholarship}</p>
-                                        </div>
-                                    </div>
-                                </motion.div>
-                            )}
-                        </motion.div>
-
-                        {/* Content */}
-                        <motion.div
-                            className="space-y-8"
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ duration: 0.6, delay: 0.2 }}
-                        >
-                            <div>
-                                <h1 className="text-4xl md:text-5xl font-bold font-display mb-4">
-                                    About Me
-                                </h1>
-                                <h2 className="text-xl md:text-2xl text-accent-blue font-semibold mb-6">
-                                    {aboutContent.headline}
-                                </h2>
-                            </div>
-
-                            <div className="space-y-4 text-text-secondary leading-relaxed">
-                                <p className="text-lg">
-                                    {aboutContent.introduction}
-                                </p>
-                            </div>
-
-                            {/* Education Badge */}
-                            {aboutContent.education.length > 0 && (
-                                <div className="space-y-3">
-                                    {aboutContent.education.map((edu, index) => (
-                                        <div key={index} className="p-4 rounded-xl bg-bg-secondary border border-border-default">
-                                            <div className="flex items-start gap-4">
-                                                <div className="w-12 h-12 rounded-lg bg-accent-blue/10 flex items-center justify-center text-accent-blue flex-shrink-0">
-                                                    🎓
-                                                </div>
-                                                <div>
-                                                    <p className="font-semibold text-text-primary">{edu.degree}</p>
-                                                    <p className="text-sm text-text-secondary">{edu.institution} • {edu.year}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-
-                            {/* CTA Buttons */}
-                            <div className="flex flex-wrap gap-4 pt-4">
-                                <a
-                                    href={profile.cv_url}
-                                    download
-                                    className="btn-primary"
-                                >
-                                    <FiDownload />
-                                    Download CV
-                                </a>
-                                <Link href="/contact" className="btn-secondary">
-                                    Get in Touch
-                                    <FiArrowRight />
-                                </Link>
-                            </div>
-                        </motion.div>
-                    </div>
+            {/* Info */}
+            <div className="flex-1">
+              {scholarship && (
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm mb-4"
+                     style={{ background: "rgba(59,130,246,0.1)", border: "1px solid rgba(59,130,246,0.3)", color: "var(--accent-blue)" }}>
+                  🎓 {scholarship}
                 </div>
-            </section>
-
-            {/* Research Interests */}
-            <motion.section
-                className="py-20 bg-bg-secondary"
-                initial="hidden"
-                whileInView="show"
-                viewport={{ once: true }}
-                variants={staggerContainer}
-            >
-                <div className="container mx-auto px-6">
-                    <motion.div variants={staggerItem} className="text-center mb-12">
-                        <h2 className="text-3xl font-bold font-display mb-4">Research Interests</h2>
-                        <p className="text-text-secondary max-w-2xl mx-auto">
-                            Areas where I focus my research and development efforts
-                        </p>
-                    </motion.div>
-
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
-                        {researchInterests.map((interest, index) => (
-                            <motion.div key={index} variants={staggerItem}>
-                                <div className="p-4 rounded-xl bg-bg-card border border-border-light hover:border-accent-blue transition-all flex items-center gap-3">
-                                    <span className="text-accent-blue text-xl">{interest.icon}</span>
-                                    <span className="font-medium text-text-primary text-sm">{interest.label}</span>
-                                </div>
-                            </motion.div>
-                        ))}
-                    </div>
+              )}
+              <h1 className="text-4xl font-bold mb-2" style={{ color: "var(--text-primary)" }}>About Me</h1>
+              <h2 className="text-2xl font-semibold mb-4"
+                  style={{ background: "var(--accent-gradient)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                {title}
+              </h2>
+              <p className="text-lg leading-relaxed mb-6" style={{ color: "var(--text-secondary)" }}>{bio}</p>
+              <div className="flex items-center gap-3 p-4 rounded-xl mb-6"
+                   style={{ background: "var(--bg-card)", border: "1px solid var(--border-light)" }}>
+                <span className="text-2xl">🎓</span>
+                <div>
+                  <p className="font-semibold" style={{ color: "var(--text-primary)" }}>{degree}</p>
+                  <p style={{ color: "var(--text-secondary)" }}>{university} • {univYears}</p>
                 </div>
-            </motion.section>
-
-            {/* Certifications */}
-            {certifications.length > 0 && (
-                <motion.section
-                    className="py-20 bg-gradient-to-b from-bg-secondary to-bg-primary"
-                    initial="hidden"
-                    whileInView="show"
-                    viewport={{ once: true }}
-                    variants={staggerContainer}
-                >
-                    <div className="container mx-auto px-6">
-                        <motion.div variants={staggerItem} className="text-center mb-12">
-                            <h2 className="text-3xl font-bold font-display mb-4">Certifications</h2>
-                            <p className="text-text-secondary max-w-2xl mx-auto">
-                                Professional certifications and credentials validating my expertise
-                            </p>
-                        </motion.div>
-
-                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
-                            {certifications.map((cert, index) => {
-                                const colors = [
-                                    'from-orange-500/10 to-yellow-500/10 border-orange-500/20',
-                                    'from-blue-500/10 to-purple-500/10 border-blue-500/20',
-                                    'from-emerald-500/10 to-cyan-500/10 border-emerald-500/20',
-                                ];
-                                const colorClass = colors[index % colors.length];
-
-                                return (
-                                    <motion.div key={cert.id} variants={staggerItem}>
-                                        <div className={`p-6 rounded-2xl border bg-gradient-to-br ${colorClass} hover:shadow-lg transition-all group h-full flex flex-col`}>
-                                            <div className="w-14 h-14 rounded-xl bg-bg-card flex items-center justify-center mb-4 group-hover:scale-105 transition-transform shadow-sm relative">
-                                                {cert.image_url ? (
-                                                    <div className="relative w-10 h-10">
-                                                        <Image
-                                                            src={cert.image_url}
-                                                            alt={cert.title}
-                                                            fill
-                                                            sizes="40px"
-                                                            className="object-contain"
-                                                        />
-                                                    </div>
-                                                ) : (
-                                                    <span className="text-2xl">🏆</span>
-                                                )}
-                                            </div>
-                                            <h3 className="font-bold text-text-primary mb-1 text-lg">{cert.title}</h3>
-                                            <p className="text-sm text-text-secondary mb-2">{cert.issuer}</p>
-                                            <p className="text-xs text-text-muted mb-4">{cert.date_issued}</p>
-                                            {cert.credential_url && (
-                                                <a
-                                                    href={cert.credential_url}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="mt-auto inline-flex items-center gap-1 text-sm font-medium text-accent-blue hover:underline"
-                                                >
-                                                    View Credential <FiArrowRight className="text-xs" />
-                                                </a>
-                                            )}
-                                        </div>
-                                    </motion.div>
-                                );
-                            })}
-                        </div>
-                    </div>
-                </motion.section>
-            )}
-
-            {/* Future Directions */}
-            <motion.section
-                className="py-20 bg-bg-primary"
-                initial="hidden"
-                whileInView="show"
-                viewport={{ once: true }}
-                variants={staggerContainer}
-            >
-                <div className="container mx-auto px-6">
-                    <motion.div variants={staggerItem} className="text-center mb-12">
-                        <h2 className="text-3xl font-bold font-display mb-4">Future Directions</h2>
-                        <p className="text-text-secondary max-w-2xl mx-auto">
-                            Where I'm heading with my research and career
-                        </p>
-                    </motion.div>
-
-                    <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-                        {futureDirections.map((direction, index) => (
-                            <motion.div key={index} variants={staggerItem}>
-                                <Card className="h-full glass-panel">
-                                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent-blue/20 to-purple-500/20 flex items-center justify-center text-2xl mb-4">
-                                        {index === 0 ? '🏥' : index === 1 ? '🧠' : '🔐'}
-                                    </div>
-                                    <h3 className="text-lg font-bold text-text-primary mb-2">
-                                        {direction.title}
-                                    </h3>
-                                    <p className="text-text-secondary text-sm leading-relaxed">
-                                        {direction.description}
-                                    </p>
-                                </Card>
-                              </motion.div>
-                        ))}
-                    </div>
-                </div>
-            </motion.section>
-
-            {/* CTA Section */}
-            <section className="py-20 bg-bg-secondary border-t border-border-default">
-                <div className="container mx-auto px-6">
-                    <div className="max-w-3xl mx-auto text-center">
-                        <h2 className="text-2xl md:text-3xl font-bold font-display mb-4">
-                            Want to know more about my work?
-                        </h2>
-                        <p className="text-text-secondary mb-8">
-                            Check out my projects to see my research in action, or explore my publications for academic work.
-                        </p>
-                        <div className="flex flex-wrap justify-center gap-4">
-                            <Link href="/projects" className="btn-primary">
-                                View Projects <FiArrowRight />
-                            </Link>
-                            <Link href="/publications" className="btn-secondary">
-                                Publications
-                            </Link>
-                        </div>
-                    </div>
-                </div>
-            </section>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <a href={cvUrl} download className="px-6 py-2.5 rounded-lg font-semibold"
+                   style={{ background: "var(--accent-gradient)", color: "white" }}>Download CV</a>
+                <Link href="/contact" className="px-6 py-2.5 rounded-lg font-semibold"
+                      style={{ border: "1px solid var(--accent-blue)", color: "var(--accent-blue)" }}>Get in Touch</Link>
+              </div>
+              <div className="flex gap-4 mt-4">
+                {github && <a href={github} target="_blank" rel="noopener noreferrer" className="text-sm hover:opacity-70" style={{ color: "var(--text-secondary)" }}>GitHub ↗</a>}
+                {linkedin && linkedin !== "#" && <a href={linkedin} target="_blank" rel="noopener noreferrer" className="text-sm hover:opacity-70" style={{ color: "var(--text-secondary)" }}>LinkedIn ↗</a>}
+                <a href={"mailto:" + email} className="text-sm hover:opacity-70" style={{ color: "var(--text-secondary)" }}>{email}</a>
+              </div>
+            </div>
+          </div>
         </div>
-    );
+      </section>
+
+      {/* Skills */}
+      {Object.keys(skillCategories).length > 0 && (
+        <section className="py-16 px-6">
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-3xl font-bold mb-2" style={{ color: "var(--text-primary)" }}>Skills & Expertise</h2>
+            <p className="mb-10" style={{ color: "var(--text-secondary)" }}>Technologies and tools I work with</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Object.entries(skillCategories).map(([category, categorySkills]) => (
+                <div key={category} className="p-6 rounded-xl"
+                     style={{ background: "var(--bg-card)", border: "1px solid var(--border-light)" }}>
+                  <h3 className="font-semibold mb-4" style={{ color: "var(--accent-blue)" }}>{category}</h3>
+                  <div className="space-y-3">
+                    {categorySkills.map((skill: Row) => (
+                      <div key={String(skill.id)}>
+                        <div className="flex justify-between mb-1">
+                          <span className="text-sm" style={{ color: "var(--text-primary)" }}>{String(skill.name)}</span>
+                          <span className="text-xs" style={{ color: "var(--text-muted)" }}>{String(skill.proficiency)}%</span>
+                        </div>
+                        <div className="w-full rounded-full h-1.5" style={{ background: "var(--border)" }}>
+                          <div className="h-1.5 rounded-full" style={{ width: `${skill.proficiency}%`, background: "var(--accent-gradient)" }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Certifications */}
+      <section className="py-16 px-6">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-3xl font-bold mb-2" style={{ color: "var(--text-primary)" }}>Certifications</h2>
+          <p className="mb-10" style={{ color: "var(--text-secondary)" }}>Professional certifications validating my expertise</p>
+          {certifications.length === 0 ? (
+            <p style={{ color: "var(--text-muted)" }}>No certifications added yet. Add them from the admin panel.</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {certifications.map((cert: Row) => {
+                const certTitle   = String(cert.title   ?? "");
+                const certIssuer  = String(cert.issuer  ?? "");
+                const certYear    = cert.year    ? String(cert.year)    : null;
+                const certDesc    = cert.description ? String(cert.description) : null;
+                const certUrl     = cert.credential_url ? String(cert.credential_url) : null;
+                const certImg     = cert.image_url  ? String(cert.image_url)  : null;
+                return (
+                  <div key={String(cert.id)} className="p-6 rounded-xl flex flex-col gap-3 transition-all hover:scale-[1.02]"
+                       style={{ background: "var(--bg-card)", border: "1px solid var(--border-light)", boxShadow: "0 4px 20px rgba(0,0,0,0.2)" }}>
+                    <div className="flex items-start gap-4">
+                      {certImg ? (
+                        <img src={certImg} alt={certTitle} className="w-12 h-12 rounded-lg object-contain" />
+                      ) : (
+                        <div className="w-12 h-12 rounded-lg flex items-center justify-center text-2xl"
+                             style={{ background: "rgba(59,130,246,0.1)" }}>🏆</div>
+                      )}
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-sm leading-tight" style={{ color: "var(--text-primary)" }}>{certTitle}</h3>
+                        <p className="text-xs mt-1" style={{ color: "var(--accent-blue)" }}>{certIssuer}</p>
+                        {certYear && <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>{certYear}</p>}
+                      </div>
+                    </div>
+                    {certDesc && <p className="text-xs" style={{ color: "var(--text-secondary)" }}>{certDesc}</p>}
+                    {certUrl && certUrl !== "#" && (
+                      <a href={certUrl} target="_blank" rel="noopener noreferrer"
+                         className="text-xs font-medium mt-auto hover:opacity-70" style={{ color: "var(--accent-cyan)" }}>
+                        View Credential →
+                      </a>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="py-16 px-6 text-center">
+        <div className="max-w-2xl mx-auto">
+          <h2 className="text-3xl font-bold mb-4" style={{ color: "var(--text-primary)" }}>Want to know more?</h2>
+          <p className="mb-8" style={{ color: "var(--text-secondary)" }}>Check out my projects or explore my publications.</p>
+          <div className="flex justify-center gap-4 flex-wrap">
+            <Link href="/projects" className="px-8 py-3 rounded-lg font-semibold"
+                  style={{ background: "var(--accent-gradient)", color: "white" }}>View Projects</Link>
+            <Link href="/publications" className="px-8 py-3 rounded-lg font-semibold"
+                  style={{ border: "1px solid var(--accent-blue)", color: "var(--accent-blue)" }}>Publications</Link>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  );
 }
