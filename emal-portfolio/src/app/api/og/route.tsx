@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
         const { searchParams } = new URL(request.url);
 
         const title = searchParams.get('title') || 'Emal Kamawal';
-        const description = searchParams.get('description') || 'AI Researcher in Healthcare';
+        const description = searchParams.get('description') || 'Data Scientist & ML Researcher';
         const type = searchParams.get('type') || 'default'; // project, blog, default
         const category = searchParams.get('category') || '';
 
@@ -139,7 +139,7 @@ export async function GET(request: NextRequest) {
                                     Emal Kamawal
                                 </div>
                                 <div style={{ color: '#64748b', fontSize: '16px' }}>
-                                    AI Researcher in Healthcare
+                                    Data Scientist & ML Researcher
                                 </div>
                             </div>
                         </div>
@@ -150,7 +150,7 @@ export async function GET(request: NextRequest) {
                                 fontSize: '16px',
                             }}
                         >
-                            emalkamawal.com
+                            emal03-portfolio.vercel.app
                         </div>
                     </div>
                 </div>

@@ -44,7 +44,7 @@ const sampleGatedProject: GatedProject = {
     limitations: 'The dataset is limited to specific tumor types and imaging protocols...',
     category: ['Healthcare AI', 'Computer Vision'],
     tags: ['Deep Learning', 'Medical Imaging', 'Segmentation', 'PyTorch'],
-    github_link: 'https://github.com/emalkamawal/brain-tumor-seg',
+    github_link: 'https://github.com/emal03/brain-tumor-seg',
     visibility: 'gated',
     images: [{ url: '/projects/brain-tumor.png', caption: 'Model architecture overview' }],
     metrics: [

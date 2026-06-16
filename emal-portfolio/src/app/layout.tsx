@@ -20,12 +20,12 @@ const inter = Inter({
   display: 'swap',
 });
 
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://emalkamawal.com';
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://emal03-portfolio.vercel.app';
 
 export const viewport: Viewport = {
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#ffffff' },
-    { media: '(prefers-color-scheme: dark)', color: '#0f172a' },
+    { media: '(prefers-color-scheme: dark)', color: '#0a0f1e' },
   ],
   width: 'device-width',
   initialScale: 1,
@@ -34,11 +34,11 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
   title: {
-    default: 'Emal Kamawal | AI Researcher in Healthcare',
+    default: 'Emal Kamawal | Data Scientist & ML Researcher',
     template: '%s | Emal Kamawal',
   },
-  description: 'Portfolio of Emal Kamawal - AI Researcher specializing in Healthcare AI, Computer Vision, Brain-Computer Interfaces, and Privacy-Preserving Machine Learning.',
-  keywords: ['AI Researcher', 'Healthcare AI', 'Computer Vision', 'BCI', 'Machine Learning', 'Deep Learning', 'Medical Imaging', 'Emal Kamawal'],
+  description: 'Portfolio of Emal Kamawal - Data Scientist & ML Researcher specializing in Machine Learning, Computer Vision, and Medical Data Analysis — transforming raw data into actionable knowledge.',
+  keywords: ['Data Scientist', 'ML Researcher', 'Machine Learning', 'Data Science', 'Computer Vision', 'Medical Data Analysis', 'Bioinformatics', 'Emal Kamawal'],
   authors: [{ name: 'Emal Kamawal', url: baseUrl }],
   creator: 'Emal Kamawal',
   publisher: 'Emal Kamawal',
@@ -58,23 +58,23 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: baseUrl,
     siteName: 'Emal Kamawal',
-    title: 'Emal Kamawal | AI Researcher in Healthcare',
-    description: 'AI Researcher specializing in Healthcare AI, Computer Vision, and Brain-Computer Interfaces.',
+    title: 'Emal Kamawal | Data Scientist & ML Researcher',
+    description: 'Data Scientist & ML Researcher specializing in Machine Learning, Computer Vision, and Medical Data Analysis.',
     images: [
       {
         url: `${baseUrl}/api/og`,
         width: 1200,
         height: 630,
-        alt: 'Emal Kamawal - AI Researcher in Healthcare',
+        alt: 'Emal Kamawal - Data Scientist & ML Researcher',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Emal Kamawal | AI Researcher in Healthcare',
-    description: 'AI Researcher specializing in Healthcare AI, Computer Vision, and BCI.',
+    title: 'Emal Kamawal | Data Scientist & ML Researcher',
+    description: 'Data Scientist & ML Researcher specializing in Machine Learning, Computer Vision, and Medical Data Analysis.',
     images: [`${baseUrl}/api/og`],
-    creator: '@emalkamawal',
+    creator: '',
   },
   alternates: {
     canonical: baseUrl,
@@ -99,7 +99,7 @@ export default function RootLayout({
         {/* Plausible Analytics - Privacy-friendly analytics */}
         <Script
           defer
-          data-domain="emalkamawal.com"
+          data-domain="emal03-portfolio.vercel.app"
           src="https://plausible.io/js/script.js"
           strategy="afterInteractive"
         />

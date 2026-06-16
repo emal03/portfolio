@@ -1,391 +1,240 @@
+// src/app/projects/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiSearch, FiFilter, FiExternalLink, FiLock, FiGlobe, FiShield } from 'react-icons/fi';
+import { FiSearch, FiExternalLink, FiLock, FiGithub, FiArrowRight } from 'react-icons/fi';
 import Card from '@/components/ui/Card';
-import { supabase } from '@/lib/supabase';
 
 interface Project {
-    id: string;
+    id: number;
     title: string;
     slug: string;
-    short_description: string;
-    category: string[];
-    tags: string[];
-    images: { url: string; caption: string }[];
-    visibility: string;
+    description: string;
+    github_url?: string;
+    is_gated: boolean;
     is_featured: boolean;
-    created_at: string;
+    status: 'public' | 'gated' | 'private';
+    tags: string[];
+    tech_stack: string[];
+    thumbnail_url?: string;
 }
 
 export default function ProjectsPage() {
     const [projects, setProjects] = useState<Project[]>([]);
     const [loading, setLoading] = useState(true);
-    const [activeCategory, setActiveCategory] = useState('All');
     const [searchQuery, setSearchQuery] = useState('');
-
-    const categories = [
-        { key: 'All', label: 'All Projects' },
-        { key: 'Healthcare AI', label: 'Healthcare AI' },
-        { key: 'Computer Vision', label: 'Computer Vision' },
-        { key: 'EEG/BCI', label: 'EEG/BCI' },
-        { key: 'NLP', label: 'NLP' },
-        { key: 'Cybersecurity', label: 'Cybersecurity' },
-        { key: 'Privacy', label: 'Privacy' },
-        { key: 'IoT', label: 'IoT' },
-        { key: 'Medical Imaging', label: 'Medical Imaging' },
-        { key: 'Deep Learning', label: 'Deep Learning' },
-        { key: 'Machine Learning', label: 'Machine Learning' },
-    ];
-
-    // Emal Kamawal's actual projects
-    const staticProjects: Project[] = [
-        {
-            id: '1',
-            title: 'Thought Viz: EEG-Driven Visual Reconstruction',
-            slug: 'thought-viz',
-            short_description: 'Novel BCI pipeline for reconstructing visual scenes from EEG signals using adaptive encoder-decoder architecture coupled with diffusion models. Achieved 78% accuracy with real-time processing under 200ms latency.',
-            category: ['EEG/BCI', 'Healthcare AI'],
-            tags: ['BCI', 'Deep Learning', 'EEG', 'Diffusion Models', 'Signal Processing'],
-            images: [{ url: '/projects/thought-viz.png', caption: 'Thought Viz Architecture' }],
-            visibility: 'public',
-            is_featured: true,
-            created_at: '2025-01-01',
-        },
-        {
-            id: '2',
-            title: 'Brain Tumor Segmentation System',
-            slug: 'brain-tumor-segmentation',
-            short_description: 'U-Net based brain tumor segmentation system achieving 98.2% dice coefficient on BRATS dataset. Validated with medical professionals for clinical deployment.',
-            category: ['Healthcare AI', 'Computer Vision'],
-            tags: ['Medical Imaging', 'Segmentation', 'U-Net', 'Deep Learning', 'MRI'],
-            images: [{ url: '/projects/brain-tumor.png', caption: 'Segmentation Results' }],
-            visibility: 'public',
-            is_featured: true,
-            created_at: '2024-01-15',
-        },
-        {
-            id: '3',
-            title: 'Heart Disease Prediction System',
-            slug: 'heart-disease-prediction',
-            short_description: 'Ensemble learning approach for heart disease prediction reaching 99.35% accuracy using clinical biomarkers. Collaborated with medical professionals for validation.',
-            category: ['Healthcare AI'],
-            tags: ['Ensemble Learning', 'Clinical Data', 'Healthcare', 'Biomarkers'],
-            images: [{ url: '/projects/heart-disease.png', caption: 'Prediction Pipeline' }],
-            visibility: 'public',
-            is_featured: true,
-            created_at: '2024-02-20',
-        },
-        {
-            id: '4',
-            title: 'Dental X-Ray AI Analysis',
-            slug: 'dental-xray-ai',
-            short_description: 'AI-driven dental X-ray image analysis system for automated missing-teeth detection using YOLO-based segmentation with high-resolution, multi-scale inference.',
-            category: ['Healthcare AI', 'Computer Vision'],
-            tags: ['Dental AI', 'X-Ray', 'YOLO', 'Object Detection', 'Healthcare'],
-            images: [{ url: '/projects/dental-ai.png', caption: 'Detection Results' }],
-            visibility: 'gated',
-            is_featured: false,
-            created_at: '2025-06-20',
-        },
-        {
-            id: '5',
-            title: 'Real-Time DDoS Attack Detection',
-            slug: 'ddos-detection',
-            short_description: 'Supervised learning pipeline for network intrusion detection achieving 96.8% accuracy with sub-millisecond response time. Implemented advanced feature engineering for high-dimensional network traffic.',
-            category: ['Cybersecurity'],
-            tags: ['DDoS', 'Network Security', 'Machine Learning', 'Anomaly Detection'],
-            images: [{ url: '/projects/ddos-defense.png', caption: 'Detection Pipeline' }],
-            visibility: 'public',
-            is_featured: false,
-            created_at: '2023-11-05',
-        },
-        {
-            id: '6',
-            title: 'YOLO-Powered Blackjack Strategy Assistant',
-            slug: 'blackjack-cv',
-            short_description: 'Real-time card detection and optimal strategy recommendation system using YOLOv8. Integrated probability calculations with live video feed processing.',
-            category: ['Computer Vision'],
-            tags: ['YOLO', 'Real-time Detection', 'Computer Vision', 'Gaming AI'],
-            images: [{ url: '/projects/blackjack.png', caption: 'Card Detection' }],
-            visibility: 'public',
-            is_featured: false,
-            created_at: '2023-09-15',
-        },
-        {
-            id: '7',
-            title: 'PDF Malware Analysis Framework',
-            slug: 'pdf-malware-detection',
-            short_description: 'Comprehensive NLP pipeline for detecting malicious JavaScript, embedded links, and phishing content in PDF documents using deep learning and pattern recognition.',
-            category: ['Cybersecurity', 'NLP'],
-            tags: ['Malware Detection', 'NLP', 'PDF Analysis', 'Deep Learning', 'Security'],
-            images: [{ url: '/projects/pdf-malware.png', caption: 'Analysis Pipeline' }],
-            visibility: 'public',
-            is_featured: false,
-            created_at: '2023-08-10',
-        },
-        {
-            id: '8',
-            title: 'Federated Learning Healthcare System',
-            slug: 'federated-healthcare',
-            short_description: 'Federated learning framework for collaborative medical AI model training while preserving patient data privacy across multiple healthcare institutions.',
-            category: ['Healthcare AI', 'Privacy'],
-            tags: ['Federated Learning', 'Privacy-Preserving ML', 'Healthcare', 'Distributed Systems'],
-            images: [{ url: '/projects/federated-learning.png', caption: 'Federated Architecture' }],
-            visibility: 'gated',
-            is_featured: true,
-            created_at: '2023-07-01',
-        },
-    ];
+    const [activeTag, setActiveTag] = useState('All');
 
     useEffect(() => {
+        const fetchProjects = async () => {
+            try {
+                const res = await fetch('/api/projects');
+                if (!res.ok) throw new Error('Failed to fetch');
+                const data = await res.json();
+                setProjects(data);
+            } catch (err) {
+                console.error('Error fetching projects:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
         fetchProjects();
     }, []);
 
-    const fetchProjects = async () => {
-        try {
-            const { data, error } = await supabase
-                .from('projects')
-                .select('*')
-                .order('created_at', { ascending: false });
-
-            if (data && data.length > 0) {
-                setProjects(data);
-            } else {
-                setProjects(staticProjects);
-            }
-        } catch (error) {
-            console.error('Error fetching projects:', error);
-            setProjects(staticProjects);
-        }
-        setLoading(false);
-    };
+    // Extract all unique tags for filtering
+    const allTags = ['All', ...Array.from(new Set(projects.flatMap(p => p.tags || [])))];
 
     const filteredProjects = projects.filter(project => {
-        const matchesCategory = activeCategory === 'All' || project.category?.includes(activeCategory);
+        const matchesTag = activeTag === 'All' || project.tags?.includes(activeTag);
         const matchesSearch = searchQuery === '' ||
             project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            project.short_description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            project.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
-        return matchesCategory && matchesSearch;
+            project.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            project.tech_stack?.some(t => t.toLowerCase().includes(searchQuery.toLowerCase())) ||
+            project.tags?.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()));
+        return matchesTag && matchesSearch;
     });
 
-    const getProjectImage = (project: Project) => {
-        if (project.images && project.images.length > 0) {
-            return project.images[0].url;
-        }
-        return `/projects/${project.slug}.png`;
-    };
-
-    const getVisibilityBadge = (visibility: string) => {
-        switch (visibility) {
-            case 'public':
-                return { icon: <FiGlobe size={12} />, label: 'Public', class: 'badge-public' };
-            case 'gated':
-                return { icon: <FiLock size={12} />, label: 'Gated', class: 'badge-gated' };
-            case 'nda':
-                return { icon: <FiShield size={12} />, label: 'NDA', class: 'badge-nda' };
-            default:
-                return { icon: <FiGlobe size={12} />, label: 'Public', class: 'badge-public' };
-        }
-    };
-
-    const containerVariants = {
-        hidden: { opacity: 0 },
-        show: {
-            opacity: 1,
-            transition: { staggerChildren: 0.1 }
-        }
-    };
-
-    const itemVariants = {
-        hidden: { opacity: 0, y: 20 },
-        show: { opacity: 1, y: 0, transition: { duration: 0.4 } }
-    };
-
     return (
-        <div className="min-h-screen py-16">
-            {/* Header */}
+        <div className="min-h-screen py-16 bg-bg-primary">
             <div className="container mx-auto px-6">
+                {/* Header */}
                 <motion.div
                     className="text-center mb-12"
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
                 >
-                    <h1 className="text-4xl md:text-5xl font-bold font-display mb-4">Projects</h1>
-                    <p className="text-[var(--text-secondary)] max-w-2xl mx-auto">
-                        A showcase of my research and development work in AI, Healthcare, and Engineering.
-                        Some projects are gated for confidentiality — request access to learn more.
+                    <h1 className="text-4xl md:text-5xl font-bold mb-4 font-display text-gradient">Projects</h1>
+                    <p className="text-text-secondary max-w-2xl mx-auto">
+                        Explore my latest research, deep learning frameworks, and AI diagnostics projects.
+                        Request access to review gated code repositories.
                     </p>
                 </motion.div>
 
-                {/* Search & Filters */}
+                {/* Filters */}
                 <motion.div
                     className="mb-12 space-y-6"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.1 }}
-                >
-                    {/* Search Bar */}
-                    <div className="max-w-md mx-auto">
-                        <div className="relative">
-                            <div className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center opacity-70">
-                                <img src="/emal_logo.png" alt="Search" className="w-full h-full object-contain" />
-                            </div>
-                            <input
-                                type="text"
-                                placeholder="Search projects..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-12 pr-4 py-3 rounded-xl bg-[var(--surface)] border border-[var(--border)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--brand-primary)] transition-colors"
-                            />
-                        </div>
-                    </div>
-
-                    {/* Category Filters */}
-                    <div className="flex flex-wrap justify-center gap-2">
-                        {categories.map((cat) => (
-                            <button
-                                key={cat.key}
-                                onClick={() => setActiveCategory(cat.key)}
-                                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${activeCategory === cat.key
-                                    ? 'bg-[var(--brand-primary)] text-white shadow-md'
-                                    : 'bg-[var(--surface)] text-[var(--text-secondary)] border border-[var(--border)] hover:border-[var(--brand-primary)] hover:text-[var(--text-primary)]'
-                                    }`}
-                            >
-                                {cat.label}
-                            </button>
-                        ))}
-                    </div>
-                </motion.div>
-
-                {/* Results Count */}
-                <motion.div
-                    className="mb-8 flex items-center justify-between"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ delay: 0.2 }}
+                    transition={{ delay: 0.1 }}
                 >
-                    <p className="text-sm text-[var(--text-muted)]">
-                        Showing {filteredProjects.length} project{filteredProjects.length !== 1 ? 's' : ''}
-                        {activeCategory !== 'All' && ` in ${activeCategory}`}
-                    </p>
-                    <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
-                        <span className="flex items-center gap-1"><FiGlobe size={12} /> Public</span>
-                        <span className="flex items-center gap-1"><FiLock size={12} /> Gated</span>
-                        <span className="flex items-center gap-1"><FiShield size={12} /> NDA</span>
+                    {/* Search */}
+                    <div className="max-w-md mx-auto relative">
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted">
+                            <FiSearch size={18} />
+                        </div>
+                        <input
+                            type="text"
+                            placeholder="Search by title, technology, tags..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full pl-12 pr-4 py-3 rounded-xl bg-bg-secondary border border-border-default text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent-blue transition-colors"
+                        />
                     </div>
+
+                    {/* Tag Filters */}
+                    {allTags.length > 1 && (
+                        <div className="flex flex-wrap justify-center gap-2 max-w-3xl mx-auto">
+                            {allTags.map((tag) => (
+                                <button
+                                    key={tag}
+                                    onClick={() => setActiveTag(tag)}
+                                    className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all ${
+                                        activeTag === tag
+                                            ? 'bg-accent-blue text-white shadow-md'
+                                            : 'bg-bg-secondary text-text-secondary border border-border-default hover:border-accent-blue hover:text-text-primary'
+                                    }`}
+                                >
+                                    {tag}
+                                </button>
+                            ))}
+                        </div>
+                    )}
                 </motion.div>
 
-                {/* Loading State */}
+                {/* Loading skeleton */}
                 {loading && (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {[1, 2, 3, 4, 5, 6].map((i) => (
-                            <div key={i} className="bg-[var(--surface)] rounded-xl p-6 animate-pulse">
-                                <div className="aspect-video bg-[var(--border)] rounded-lg mb-4" />
-                                <div className="h-6 bg-[var(--border)] rounded mb-2" />
-                                <div className="h-4 bg-[var(--border)] rounded w-3/4" />
+                        {[1, 2, 3].map((i) => (
+                            <div key={i} className="bg-bg-card border border-border-light rounded-2xl p-6 space-y-4 animate-pulse">
+                                <div className="aspect-video bg-border-default rounded-xl" />
+                                <div className="h-6 bg-border-default rounded w-3/4" />
+                                <div className="h-4 bg-border-default rounded w-1/2" />
                             </div>
                         ))}
                     </div>
                 )}
 
-                {/* Projects Grid */}
+                {/* Grid */}
                 {!loading && filteredProjects.length === 0 ? (
-                    <motion.div
-                        className="text-center py-16"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                    >
-                        <div className="text-6xl mb-4">🔍</div>
-                        <p className="text-[var(--text-secondary)] text-lg mb-2">
-                            No projects found
-                        </p>
-                        <p className="text-[var(--text-muted)] text-sm">
-                            Try adjusting your search or filter criteria
-                        </p>
-                    </motion.div>
+                    <div className="text-center py-16 text-text-secondary">
+                        <p className="text-lg">No projects found matching your search.</p>
+                    </div>
                 ) : (
                     <motion.div
                         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-                        variants={containerVariants}
                         initial="hidden"
-                        whileInView="show"
-                        viewport={{ once: true }}
+                        animate="show"
+                        variants={{
+                            hidden: { opacity: 0 },
+                            show: { opacity: 1, transition: { staggerChildren: 0.1 } }
+                        }}
                     >
-                        <AnimatePresence mode="popLayout">
-                            {filteredProjects.map((project) => {
-                                const visibility = getVisibilityBadge(project.visibility);
-                                return (
-                                    <motion.div
-                                        key={project.id}
-                                        variants={itemVariants}
-                                        layout
-                                        exit={{ opacity: 0, scale: 0.9 }}
-                                    >
-                                        <Link href={`/projects/${project.slug}`}>
-                                            <Card className="h-full overflow-hidden group cursor-pointer" hover>
-                                                {/* Image */}
-                                                <div className="aspect-video -mx-6 -mt-6 mb-6 overflow-hidden relative">
-                                                    <img
-                                                        src={getProjectImage(project)}
-                                                        alt={project.title}
-                                                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                                        onError={(e) => {
-                                                            (e.target as HTMLImageElement).src = '/projects/thought-viz.png';
-                                                        }}
-                                                    />
-                                                    {/* Gradient Overlay */}
-                                                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                        {filteredProjects.map((project) => (
+                            <motion.div
+                                key={project.id}
+                                variants={{
+                                    hidden: { opacity: 0, y: 20 },
+                                    show: { opacity: 1, y: 0 }
+                                }}
+                                className="h-full"
+                            >
+                                <Card className="h-full overflow-hidden flex flex-col card-premium group" hover={false}>
+                                    {/* Thumbnail Image */}
+                                    <div className="aspect-video w-full overflow-hidden relative border-b border-border-light">
+                                        <Image
+                                            src={project.thumbnail_url || '/projects/thought-viz.png'}
+                                            alt={project.title}
+                                            fill
+                                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                            className="object-cover transition-transform duration-500 group-hover:scale-105"
+                                        />
+                                        {project.is_featured && (
+                                            <span className="absolute top-3 left-3 px-2 py-1 bg-amber-500/90 text-white text-[10px] font-bold rounded">
+                                                ⭐ Featured
+                                            </span>
+                                        )}
+                                        <span className={`absolute top-3 right-3 badge ${project.status === 'public' ? 'badge-blue' : 'badge-amber'}`}>
+                                            {project.status === 'public' ? 'Public' : project.status === 'gated' ? 'Gated' : 'Private'}
+                                        </span>
+                                    </div>
 
-                                                    {/* Badges */}
-                                                    <div className="absolute top-3 right-3 flex gap-2">
-                                                        {project.is_featured && (
-                                                            <span className="px-2 py-1 bg-amber-500/90 text-amber-900 text-xs font-bold rounded-md backdrop-blur-sm">
-                                                                ⭐ Featured
-                                                            </span>
-                                                        )}
-                                                        <span className={`badge ${visibility.class} flex items-center gap-1`}>
-                                                            {visibility.icon} {visibility.label}
-                                                        </span>
-                                                    </div>
-                                                </div>
-
-                                                {/* Tags */}
-                                                <div className="flex gap-2 mb-3 flex-wrap">
-                                                    {project.tags?.slice(0, 3).map(tag => (
-                                                        <span key={tag} className="badge badge-primary">
-                                                            {tag}
-                                                        </span>
-                                                    ))}
-                                                    {project.tags?.length > 3 && (
-                                                        <span className="text-xs text-[var(--text-muted)]">
-                                                            +{project.tags.length - 3} more
-                                                        </span>
-                                                    )}
-                                                </div>
-
-                                                {/* Content */}
-                                                <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2 group-hover:text-[var(--brand-primary)] transition-colors">
-                                                    {project.title}
-                                                </h3>
-                                                <p className="text-[var(--text-secondary)] text-sm mb-4 line-clamp-2">
-                                                    {project.short_description}
-                                                </p>
-
-                                                {/* Link */}
-                                                <span className="inline-flex items-center gap-1 text-[var(--brand-primary)] font-medium text-sm group-hover:gap-2 transition-all">
-                                                    View Details <FiExternalLink size={14} />
+                                    {/* Card Details */}
+                                    <div className="p-6 flex-1 flex flex-col">
+                                        {/* Tags & Tech badges */}
+                                        <div className="flex flex-wrap gap-1.5 mb-3">
+                                            {(project.tags || []).slice(0, 2).map(tag => (
+                                                <span key={tag} className="badge badge-blue">
+                                                    {tag}
                                                 </span>
-                                            </Card>
-                                        </Link>
-                                    </motion.div>
-                                );
-                            })}
-                        </AnimatePresence>
+                                            ))}
+                                            {(project.tech_stack || []).slice(0, 2).map(tech => (
+                                                <span key={tech} className="badge badge-cyan">
+                                                    {tech}
+                                                </span>
+                                            ))}
+                                        </div>
+
+                                        <h3 className="text-xl font-bold text-text-primary mb-2 group-hover:text-accent-blue transition-colors">
+                                            {project.title}
+                                        </h3>
+                                        
+                                        <p className="text-text-secondary text-sm line-clamp-3 mb-6 flex-1">
+                                            {project.description}
+                                        </p>
+
+                                        {/* Action buttons */}
+                                        <div className="grid grid-cols-2 gap-3 mt-auto pt-4 border-t border-border-light">
+                                            {project.is_gated ? (
+                                                <Link
+                                                    href={`/projects/${project.slug}`}
+                                                    className="px-3 py-2 text-center text-xs font-semibold text-amber-400 bg-amber-400/10 border border-amber-400/20 rounded-lg hover:bg-amber-400/20 transition-all flex items-center justify-center gap-1.5"
+                                                >
+                                                    <FiLock size={12} />
+                                                    Access Code
+                                                </Link>
+                                            ) : (
+                                                project.github_url ? (
+                                                    <a
+                                                        href={project.github_url}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="px-3 py-2 text-center text-xs font-semibold text-text-primary bg-bg-secondary border border-border-default rounded-lg hover:bg-bg-card-hover transition-all flex items-center justify-center gap-1.5"
+                                                    >
+                                                        <FiGithub size={12} />
+                                                        GitHub
+                                                    </a>
+                                                ) : (
+                                                    <div className="px-3 py-2 text-center text-xs font-semibold text-text-muted bg-transparent border border-dashed border-border-default rounded-lg select-none">
+                                                        No Code Repo
+                                                    </div>
+                                                )
+                                            )}
+
+                                            <Link
+                                                href={`/projects/${project.slug}`}
+                                                className="px-3 py-2 text-center text-xs font-semibold text-white bg-gradient-to-r from-accent-blue to-accent-cyan rounded-lg hover:opacity-90 transition-all flex items-center justify-center gap-1"
+                                            >
+                                                Details
+                                                <FiArrowRight size={12} />
+                                            </Link>
+                                        </div>
+                                    </div>
+                                </Card>
+                            </motion.div>
+                        ))}
                     </motion.div>
                 )}
             </div>

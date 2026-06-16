@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next';
 import { supabase } from '@/lib/supabase';
 
 
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://emalkamawal.com';
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://emal03-portfolio.vercel.app';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Static pages
@@ -63,7 +63,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         const { data: projects } = await supabase
             .from('projects')
             .select('slug, updated_at')
-            .eq('visibility', 'public')
+            .eq('status', 'public')
             .order('created_at', { ascending: false });
 
         if (projects) {

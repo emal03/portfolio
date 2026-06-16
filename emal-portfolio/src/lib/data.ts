@@ -3,28 +3,26 @@
 
 export const personalInfo = {
     name: 'Emal Kamawal',
-    title: 'AI Researcher in Healthcare',
-    tagline: 'Computer Vision • Machine Learning • Brain-Computer Interfaces',
-    email: 'B22F1813CS118@fecid.paf-iast.edu.pk',
+    title: 'Data Scientist & ML Researcher',
+    tagline: 'Machine Learning & Data Science • Computer Vision • Medical Data Analysis',
+    email: 'emalkamawal01@gmail.com',
     location: 'Haripur, KPK, Pakistan',
     linkedin: 'https://linkedin.com/in/emalkamawal',
-    github: 'https://github.com/emalkamawal',
+    github: 'https://github.com/emal03',
     scholar: 'https://scholar.google.com/citations?user=emalkamawal',
 };
 
-export const careerObjective = `Passionate computer scientist focused on AI for healthcare and social impact. Research spans brain-computer interfaces (EEG), medical imaging, and computer vision. Seeking a master's position and grant-funded opportunities to advance AI-driven diagnostic systems with emphasis on explainable, privacy-preserving, and clinically translational machine learning.`;
+export const careerObjective = `Passionate computer scientist focused on Machine Learning, Computer Vision, and Medical Data Analysis. Research spans data science, medical imaging, and bioinformatics — transforming raw data into actionable knowledge. Seeking a master's position and grant-funded opportunities to advance ML-driven diagnostic systems with emphasis on explainable, privacy-preserving, and clinically translational machine learning.`;
 
 export const researchAreas = [
-    'AI in Health Science',
-    'Medical Imaging',
-    'EEG/BCI',
-    'Computer Vision',
+    'Machine Learning & Data Science',
+    'Computer Vision & Medical Imaging',
+    'Bioinformatics & Research',
+    'Medical Data Analysis',
     'Deep Learning',
     'Generative AI',
-    'Machine Learning for Clinical Data',
-    'Federated Learning',
     'Explainable AI',
-    'IoT Systems',
+    'Federated Learning',
 ];
 
 export const education = [
@@ -203,14 +201,23 @@ export const skills = {
 };
 
 export const certifications = [
-    { name: 'Machine Learning Specialization', issuer: 'Stanford University (Andrew Ng)', platform: 'Coursera' },
-    { name: 'Deep Learning Specialization', issuer: 'DeepLearning.AI', platform: 'Coursera' },
-    { name: 'Natural Language Processing Specialization', issuer: 'DeepLearning.AI', platform: 'Coursera' },
-    { name: 'AWS Certified Cloud Practitioner', issuer: 'Amazon Web Services', year: 2023 },
-    { name: 'Computer Vision Specialization', issuer: 'University of Washington', platform: 'Coursera' },
-    { name: 'Advanced Python for Data Science', issuer: 'IBM', platform: 'edX' },
-    { name: 'IoT Systems Engineering', issuer: 'SPCAI' },
+    { id: '1', title: 'TensorFlow Developer Certificate', issuer: 'Google', date_issued: '2024', credential_url: '#' },
+    { id: '2', title: 'Deep Learning Specialization', issuer: 'Coursera / DeepLearning.AI', date_issued: '2023', credential_url: '#' },
+    { id: '3', title: 'AWS Machine Learning Specialty', issuer: 'Amazon Web Services', date_issued: '2024', credential_url: '#' },
+    { id: '4', title: 'Machine Learning Specialization', issuer: 'Stanford University (Andrew Ng)', date_issued: '2023', credential_url: '#' },
+    { id: '5', title: 'Natural Language Processing Specialization', issuer: 'DeepLearning.AI', date_issued: '2023', credential_url: '#' },
+    { id: '6', title: 'AWS Certified Cloud Practitioner', issuer: 'Amazon Web Services', date_issued: '2023', credential_url: '#' },
+    { id: '7', title: 'Computer Vision Specialization', issuer: 'University of Washington', date_issued: '2023', credential_url: '#' },
+    { id: '8', title: 'Advanced Python for Data Science', issuer: 'IBM', date_issued: '2023', credential_url: '#' },
+    { id: '9', title: 'IoT Systems Engineering', issuer: 'SPCAI', date_issued: '2022', credential_url: '#' },
 ];
+
+export const stats = {
+    researchProjects: '10+',
+    publications: '3+',
+    openSourceProjects: '5+',
+    yearsExperience: '2+',
+};
 
 export const languages = [
     { language: 'English', level: 'Fluent' },
@@ -244,8 +251,8 @@ export const references = [
 ];
 
 export const futureGoals = [
-    'Advancing brain-computer interface technology for assistive applications and neural rehabilitation',
+    'Advancing computer vision models for automated medical imaging diagnostics',
     'Developing explainable AI systems for critical healthcare decision-making',
     'Exploring federated learning approaches for privacy-preserving medical AI',
-    'Investigating multimodal AI systems combining vision, language, and physiological signals',
+    'Investigating multimodal AI systems combining vision, language, and clinical datasets',
 ];

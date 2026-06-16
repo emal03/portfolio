@@ -1,6 +1,6 @@
 // JSON-LD Schema Markup Types for SEO - Updated with Emal Kamawal's Information
 
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://emalkamawal.com';
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://emal03-portfolio.vercel.app';
 
 // Person schema for Emal Kamawal
 export function generatePersonSchema() {
@@ -12,9 +12,9 @@ export function generatePersonSchema() {
         familyName: 'Kamawal',
         url: baseUrl,
         image: `${baseUrl}/profile.jpg`,
-        email: 'B22F1813CS118@fecid.paf-iast.edu.pk',
-        jobTitle: 'AI Researcher in Healthcare',
-        description: 'Passionate computer scientist focused on AI for healthcare and social impact. Research spans brain-computer interfaces (EEG), medical imaging, and computer vision.',
+        email: 'emalkamawal01@gmail.com',
+        jobTitle: 'Data Scientist & ML Researcher',
+        description: 'Passionate computer scientist focused on Machine Learning, Computer Vision, and Medical Data Analysis — transforming raw data into actionable knowledge.',
         alumniOf: {
             '@type': 'CollegeOrUniversity',
             name: 'Pak-Austria Fachhochschule: Institute of Applied Sciences & Technology',
@@ -23,20 +23,18 @@ export function generatePersonSchema() {
         knowsAbout: [
             'Artificial Intelligence',
             'Machine Learning',
-            'Healthcare AI',
-            'Medical Imaging',
-            'Deep Learning',
+            'Data Science',
             'Computer Vision',
-            'Brain-Computer Interfaces',
-            'EEG Signal Processing',
-            'Federated Learning',
+            'Medical Data Analysis',
+            'Bioinformatics',
+            'Deep Learning',
             'Explainable AI',
+            'Federated Learning',
             'Generative AI',
-            'IoT Systems',
         ],
         knowsLanguage: ['English', 'Pashto', 'Persian', 'Dari', 'Urdu'],
         sameAs: [
-            'https://github.com/emalkamawal',
+            'https://github.com/emal03',
             'https://linkedin.com/in/emalkamawal',
             'https://scholar.google.com/citations?user=emalkamawal',
         ],
@@ -78,9 +76,9 @@ export function generateWebsiteSchema() {
     return {
         '@context': 'https://schema.org',
         '@type': 'WebSite',
-        name: 'Emal Kamawal - AI Researcher in Healthcare',
+        name: 'Emal Kamawal - Data Scientist & ML Researcher',
         url: baseUrl,
-        description: 'Portfolio and research work of Emal Kamawal, specializing in AI applications in healthcare, brain-computer interfaces, and medical imaging.',
+        description: 'Portfolio and research work of Emal Kamawal, specializing in Machine Learning, Computer Vision, and Medical Data Analysis.',
         author: generatePersonSchema(),
         potentialAction: {
             '@type': 'SearchAction',

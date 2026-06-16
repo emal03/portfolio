@@ -1,11 +1,11 @@
+// src/lib/supabase.ts
 import { neon } from '@neondatabase/serverless';
+import { createClient } from '@supabase/supabase-js';
 
 const sql = neon(process.env.NEXT_PUBLIC_DATABASE_URL!);
 
 // Helper: execute raw parameterized query via Neon
 async function rawQuery(query: string, params: any[] = []): Promise<any[]> {
-    // Neon's sql function accepts (queryString, paramsArray) at runtime
-    // We must use .query() for plain string queries with placeholders
     const result = await (sql as any).query(query, params);
     return Array.isArray(result) ? result : [];
 }
@@ -88,7 +88,6 @@ class QueryBuilder {
         return this;
     }
 
-    // Build WHERE clause
     private buildWhere(startIdx: number = 1): { clause: string; values: any[] } {
         const values: any[] = [];
         let clause = '';
@@ -97,7 +96,6 @@ class QueryBuilder {
             const op = cond.op || '=';
             const prefix = i === 0 ? ' WHERE ' : ' AND ';
             if (op === '@>') {
-                // Array contains — cast value to jsonb
                 clause += `${prefix}"${cond.column}"::jsonb @> $${paramIdx}::jsonb`;
                 values.push(JSON.stringify(cond.value));
             } else {
@@ -108,13 +106,11 @@ class QueryBuilder {
         return { clause, values };
     }
 
-    // Execute: makes this thenable/awaitable
     async then(
         resolve: (value: { data: any; error: any; count?: number | null }) => void,
         reject?: (reason?: any) => void
     ) {
         try {
-            // INSERT
             if (this._insertData) {
                 const row = this._insertData[0];
                 const keys = Object.keys(row);
@@ -131,7 +127,6 @@ class QueryBuilder {
                 return;
             }
 
-            // UPDATE
             if (this._updateData) {
                 const keys = Object.keys(this._updateData);
                 const values = Object.values(this._updateData);
@@ -146,7 +141,6 @@ class QueryBuilder {
                 return;
             }
 
-            // DELETE
             if (this._deleteMode) {
                 const where = this.buildWhere();
                 const query = `DELETE FROM "${this.table}"${where.clause} RETURNING *`;
@@ -155,7 +149,6 @@ class QueryBuilder {
                 return;
             }
 
-            // SELECT with COUNT
             if (this.isCount && this.isHead) {
                 const where = this.buildWhere();
                 const query = `SELECT COUNT(*) as count FROM "${this.table}"${where.clause}`;
@@ -164,7 +157,6 @@ class QueryBuilder {
                 return;
             }
 
-            // SELECT
             const cols = this.selectCols === '*'
                 ? '*'
                 : this.selectCols.split(',').map(c => {
@@ -201,21 +193,37 @@ class QueryBuilder {
     }
 }
 
-// Storage mock (no-op since we're not using Supabase Storage)
+// Supabase Storage client initialization
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || '';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+
+const hasSupabaseCreds = supabaseUrl !== '' && supabaseServiceKey !== '';
+
+const supabaseClient = hasSupabaseCreds ? createClient(supabaseUrl, supabaseServiceKey) : null;
+
+// Mock storage for fallback
 const storageMock = {
     from: (_bucket: string) => ({
-        upload: async (_path: string, _file: any) => ({ error: null }),
+        upload: async (path: string, file: any, options?: any) => {
+            console.log(`[Mock Storage] Upload file to: ${path}`);
+            return { data: { path }, error: null };
+        },
         getPublicUrl: (path: string) => ({
             data: { publicUrl: `/uploads/${path}` },
         }),
+        createSignedUrl: async (path: string, expiresIn: number) => {
+            return { data: { signedUrl: `/uploads/${path}` }, error: null };
+        },
+        remove: async (paths: string[]) => {
+            return { data: paths, error: null };
+        }
     }),
 };
 
-// Supabase-compatible client backed by Neon
+// Supabase-compatible client backed by Neon for queries and real/mock Supabase for Storage
 export const supabase = {
     from: (table: string) => new QueryBuilder(table),
-    storage: storageMock,
+    storage: supabaseClient ? supabaseClient.storage : storageMock,
 };
 
-// Export raw sql for direct queries
 export { sql };

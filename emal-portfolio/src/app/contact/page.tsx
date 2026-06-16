@@ -86,7 +86,7 @@ export default function ContactPage() {
                         <div className="space-y-4 mb-8">
                             <Card>
                                 <a
-                                    href="mailto:emalkamawal@outlook.com"
+                                    href="mailto:emalkamawal01@gmail.com"
                                     className="flex items-center gap-4 group"
                                 >
                                     <div className="w-12 h-12 rounded-xl bg-[var(--brand-primary)]/10 text-[var(--brand-primary)] flex items-center justify-center text-xl flex-shrink-0">
@@ -95,7 +95,7 @@ export default function ContactPage() {
                                     <div>
                                         <p className="text-sm text-[var(--text-muted)]">Email</p>
                                         <p className="font-semibold text-[var(--text-primary)] group-hover:text-[var(--brand-primary)] transition-colors">
-                                            emalkamawal@outlook.com
+                                            emalkamawal01@gmail.com
                                         </p>
                                     </div>
                                 </a>
@@ -137,7 +137,7 @@ export default function ContactPage() {
                                 <FiLinkedin />
                             </a>
                             <a
-                                href="https://github.com/emalkamawal"
+                                href="https://github.com/emal03"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="w-12 h-12 rounded-xl bg-[var(--surface)] border border-[var(--border)] flex items-center justify-center text-xl text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:border-[var(--text-primary)] transition-all"

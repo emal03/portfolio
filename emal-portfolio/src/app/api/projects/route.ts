@@ -1,52 +1,82 @@
+// src/app/api/projects/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { sql } from '@/lib/supabase';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../auth/[...nextauth]/route';
 
-// GET all projects (Public)
+// GET all projects
 export async function GET(request: NextRequest) {
-    const searchParams = request.nextUrl.searchParams;
-    const visibility = searchParams.get('visibility');
-    const category = searchParams.get('category');
+    try {
+        const { searchParams } = new URL(request.url);
+        const featured = searchParams.get('featured');
 
-    let query = supabase.from('projects').select('*').order('created_at', { ascending: false });
+        let projects;
+        if (featured === 'true') {
+            projects = await sql`
+                SELECT * FROM projects 
+                WHERE is_featured = true 
+                ORDER BY created_at DESC
+            `;
+        } else {
+            projects = await sql`
+                SELECT * FROM projects 
+                ORDER BY created_at DESC
+            `;
+        }
 
-    if (visibility) {
-        query = query.eq('visibility', visibility);
+        return NextResponse.json(projects);
+    } catch (error: any) {
+        console.error('Failed to get projects:', error);
+        return NextResponse.json({ error: 'Failed to get projects: ' + error.message }, { status: 500 });
     }
-
-    if (category) {
-        query = query.contains('category', [category]);
-    }
-
-    const { data, error } = await query;
-
-    if (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    return NextResponse.json(data);
 }
 
-// POST new project (Admin Only)
+// POST create project (Admin only)
 export async function POST(request: NextRequest) {
-    const session = await getServerSession(authOptions);
+    try {
+        const session = await getServerSession();
+        if (!session) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
 
-    if (!session) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        const body = await request.json();
+        const {
+            title,
+            slug,
+            description,
+            detailed_description,
+            github_url,
+            is_gated,
+            is_featured,
+            status,
+            tags,
+            tech_stack,
+            media,
+            thumbnail_url,
+            demo_url
+        } = body;
+
+        if (!title || !slug) {
+            return NextResponse.json({ error: 'Title and Slug are required' }, { status: 400 });
+        }
+
+        const result = await sql`
+            INSERT INTO projects (
+                title, slug, description, detailed_description, github_url, 
+                is_gated, is_featured, status, tags, tech_stack, media, 
+                thumbnail_url, demo_url
+            )
+            VALUES (
+                ${title}, ${slug}, ${description || ''}, ${detailed_description || ''}, ${github_url || ''}, 
+                ${is_gated || false}, ${is_featured || false}, ${status || 'public'}, 
+                ${tags || []}, ${tech_stack || []}, ${JSON.stringify(media || [])}::jsonb, 
+                ${thumbnail_url || ''}, ${demo_url || ''}
+            )
+            RETURNING *
+        `;
+
+        return NextResponse.json(result[0], { status: 201 });
+    } catch (error: any) {
+        console.error('Failed to create project:', error);
+        return NextResponse.json({ error: 'Failed to create project: ' + error.message }, { status: 500 });
     }
-
-    const body = await request.json();
-
-    const { data, error } = await supabase
-        .from('projects')
-        .insert([body])
-        .select()
-        .single();
-
-    if (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    return NextResponse.json(data, { status: 201 });
 }

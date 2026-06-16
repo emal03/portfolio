@@ -1,167 +1,97 @@
+// src/app/publications/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { FiExternalLink, FiFileText, FiCode, FiCopy, FiCheck, FiBookOpen } from 'react-icons/fi';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FiExternalLink, FiFileText, FiChevronDown, FiChevronUp, FiBookOpen } from 'react-icons/fi';
 import Card from '@/components/ui/Card';
-import { supabase } from '@/lib/supabase';
 
 interface Publication {
-    id: string;
+    id: number;
     title: string;
-    authors: string[];
-    journal: string;
-    status: 'under-review' | 'published' | 'preprint' | 'book-chapter';
+    authors: string;
+    journal_or_conference?: string;
     year: number;
-    abstract: string;
-    contributions: string[];
-    pdf_url: string;
-    doi_link: string;
-    code_repo: string;
-    created_at: string;
+    doi?: string;
+    abstract?: string;
+    pdf_url?: string;
+    status: 'published' | 'under_review' | 'submitted';
+    citation_count: number;
+    tags: string[];
 }
 
 export default function PublicationsPage() {
     const [publications, setPublications] = useState<Publication[]>([]);
     const [loading, setLoading] = useState(true);
-    const [expandedId, setExpandedId] = useState<string | null>(null);
-    const [copiedId, setCopiedId] = useState<string | null>(null);
+    const [expandedIds, setExpandedIds] = useState<number[]>([]);
     const [activeFilter, setActiveFilter] = useState('All');
 
-    const filters = ['All', 'Published', 'Under Review', 'Preprint', 'Book Chapter'];
-
-    // Emal Kamawal's actual publications
-    const staticPublications: Publication[] = [
-        {
-            id: '1',
-            title: 'Expert Fusion Network for Automated Blastocyst Morphology and IVF Decision Support',
-            authors: ['Ali Zia', 'Shahnawaz Qureshi', 'Fatima Ansarizadeh', 'Muhammad Fouzan', 'Emal Kamawal', 'Sajid Anwer', 'Chandan Karmakar'],
-            journal: 'IEEE Transactions on Biomedical Engineering',
-            status: 'under-review',
-            year: 2025,
-            abstract: 'This paper presents a novel multi-architecture deep learning framework combining U-Net, attention mechanisms, and mixture-of-experts for automated embryo morphology grading in IVF procedures.',
-            contributions: [
-                'Co-developed novel multi-architecture deep learning framework',
-                'Achieved 98% accuracy in embryo morphology grading',
-                'Implemented data preprocessing pipeline and conducted extensive validation studies'
-            ],
-            pdf_url: '',
-            doi_link: '',
-            code_repo: '',
-            created_at: '2025-01-15',
-        },
-        {
-            id: '2',
-            title: 'UAV-Based Early Weed Detection in Wheat Fields: A Comparative Study of Deep Learning Approaches',
-            authors: ['Shahnawaz Qureshi', 'Ali Zia', 'Emal Kamawal', 'Asif Ameer', 'Ahsan Latif'],
-            journal: 'Precision Agriculture Journal',
-            status: 'under-review',
-            year: 2025,
-            abstract: 'A comprehensive comparative analysis of CNN, SAM, ViT, and Mask R-CNN architectures for precision agriculture applications in weed detection from UAV imagery.',
-            contributions: [
-                'Led dataset curation and model optimization',
-                'Achieved 15% improvement over baseline methods',
-                'Conducted comparative analysis of multiple architectures'
-            ],
-            pdf_url: '',
-            doi_link: '',
-            code_repo: '',
-            created_at: '2025-02-01',
-        },
-        {
-            id: '3',
-            title: 'Integrating Artificial Intelligence and Machine Learning in 3D Cell Culture Analysis and Prediction',
-            authors: ['Muhammad Fozan', 'Muhammad Rizwan', 'Emal Kamawal', 'Muhammad Ahmad Khan', 'Dr. Shahnawaz Qureshi', 'Dr. Fazal Wahab'],
-            journal: 'Book Chapter',
-            status: 'book-chapter',
-            year: 2026,
-            abstract: 'A comprehensive chapter on applying AI/ML to 3D cell culture workflows, covering imaging-based segmentation, predictive modeling, biomarker discovery, and drug screening.',
-            contributions: [
-                'Co-authored chapter on AI/ML for 3D cell culture workflows',
-                'Synthesized case studies in oncology and stem cell research',
-                'Reviewed challenges including data quality, reproducibility, and model interpretability'
-            ],
-            pdf_url: '',
-            doi_link: '',
-            code_repo: '',
-            created_at: '2026-01-01',
-        },
-        {
-            id: '4',
-            title: 'Advanced Imaging and Analysis Techniques for 3D Cell Cultures and Organoids',
-            authors: ['Emal Kamawal', 'Hazrat Nabi', 'Muhammad Fozan', 'Arbab Waheed Ahmad', 'Habab Ali Ahmad'],
-            journal: 'Advances in Drug Development: From Biosignaling to Precision Medicine, CRC Press',
-            status: 'book-chapter',
-            year: 2026,
-            abstract: 'Chapter 4 focusing on advanced imaging and computational analysis for 3D cell cultures and organoids, covering end-to-end workflows including microscopy data preparation, segmentation and quantification techniques.',
-            contributions: [
-                'Co-authored Chapter 4 on advanced imaging techniques',
-                'Covered end-to-end workflows for 3D cell culture analysis',
-                'Discussed AI/ML-driven analysis for phenotyping and drug-response prediction'
-            ],
-            pdf_url: '',
-            doi_link: '',
-            code_repo: '',
-            created_at: '2026-01-10',
-        },
-    ];
+    const filters = ['All', 'Published', 'Under Review', 'Submitted'];
 
     useEffect(() => {
+        const fetchPublications = async () => {
+            try {
+                const res = await fetch('/api/publications');
+                if (!res.ok) throw new Error('Failed to fetch');
+                const data = await res.json();
+                setPublications(data);
+            } catch (err) {
+                console.error('Error fetching publications:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
         fetchPublications();
     }, []);
 
-    const fetchPublications = async () => {
-        try {
-            const { data, error } = await supabase
-                .from('publications')
-                .select('*')
-                .order('year', { ascending: false });
-
-            if (data && data.length > 0) {
-                setPublications(data);
-            } else {
-                setPublications(staticPublications);
-            }
-        } catch (error) {
-            console.error('Error fetching publications:', error);
-            setPublications(staticPublications);
+    const toggleExpand = (id: number) => {
+        if (expandedIds.includes(id)) {
+            setExpandedIds(expandedIds.filter(x => x !== id));
+        } else {
+            setExpandedIds([...expandedIds, id]);
         }
-        setLoading(false);
     };
 
     const filteredPublications = publications.filter(pub => {
         if (activeFilter === 'All') return true;
         if (activeFilter === 'Published') return pub.status === 'published';
-        if (activeFilter === 'Under Review') return pub.status === 'under-review';
-        if (activeFilter === 'Preprint') return pub.status === 'preprint';
-        if (activeFilter === 'Book Chapter') return pub.status === 'book-chapter';
+        if (activeFilter === 'Under Review') return pub.status === 'under_review';
+        if (activeFilter === 'Submitted') return pub.status === 'submitted';
         return true;
     });
 
+    // Group publications by year descending
+    const publicationsByYear: Record<number, Publication[]> = {};
+    filteredPublications.forEach(pub => {
+        const year = pub.year || 2026;
+        if (!publicationsByYear[year]) {
+            publicationsByYear[year] = [];
+        }
+        publicationsByYear[year].push(pub);
+    });
+
+    const sortedYears = Object.keys(publicationsByYear)
+        .map(Number)
+        .sort((a, b) => b - a);
+
     const getStatusBadge = (status: string) => {
         switch (status) {
-            case 'under-review':
+            case 'under_review':
                 return (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-500/10 border border-yellow-500/20 text-warning">
                         Under Review
                     </span>
                 );
             case 'published':
                 return (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 border border-emerald-500/20 text-success">
                         Published
                     </span>
                 );
-            case 'preprint':
+            case 'submitted':
                 return (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
-                        Preprint
-                    </span>
-                );
-            case 'book-chapter':
-                return (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400">
-                        Book Chapter
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-500/10 border border-blue-500/20 text-accent-blue">
+                        Submitted
                     </span>
                 );
             default:
@@ -169,27 +99,22 @@ export default function PublicationsPage() {
         }
     };
 
-    const highlightAuthor = (authors: string[]) => {
-        return authors?.map((author, idx) => {
-            const isEmal = author.toLowerCase().includes('emal');
+    const highlightAuthor = (authorsStr: string) => {
+        const parts = authorsStr.split(',');
+        return parts.map((part, idx) => {
+            const trimmed = part.trim();
+            const isEmal = trimmed.toLowerCase().includes('emal kamawal') || trimmed.toLowerCase().includes('emal');
             return (
                 <span key={idx}>
                     {isEmal ? (
-                        <span className="font-semibold text-[var(--text-primary)]">{author}</span>
+                        <span className="font-bold text-text-primary underline decoration-accent-blue decoration-2">{trimmed}</span>
                     ) : (
-                        author
+                        <span>{trimmed}</span>
                     )}
-                    {idx < authors.length - 1 ? ', ' : ''}
+                    {idx < parts.length - 1 ? ', ' : ''}
                 </span>
             );
         });
-    };
-
-    const handleCopyCitation = (pub: Publication) => {
-        const citation = `${pub.authors?.join(', ')} (${pub.year}). ${pub.title}. ${pub.journal || 'Manuscript in preparation'}.`;
-        navigator.clipboard.writeText(citation);
-        setCopiedId(pub.id);
-        setTimeout(() => setCopiedId(null), 2000);
     };
 
     const containerVariants = {
@@ -198,185 +123,178 @@ export default function PublicationsPage() {
     };
 
     const itemVariants = {
-        hidden: { opacity: 0, y: 20 },
-        show: { opacity: 1, y: 0 }
+        hidden: { opacity: 0, y: 15 },
+        show: { opacity: 1, y: 0, transition: { duration: 0.4 } }
     };
 
     return (
-        <div className="min-h-screen py-16">
-            <div className="container mx-auto px-6">
+        <div className="min-h-screen py-16 bg-bg-primary">
+            <div className="container mx-auto px-6 max-w-4xl">
                 {/* Header */}
                 <motion.div
                     className="text-center mb-12"
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                 >
-                    <h1 className="text-4xl md:text-5xl font-bold font-display mb-4">Publications</h1>
-                    <p className="text-[var(--text-secondary)] max-w-2xl mx-auto">
-                        Peer-reviewed papers, book chapters, and research contributions in AI and healthcare.
+                    <h1 className="text-4xl md:text-5xl font-bold mb-4 font-display text-gradient">Publications</h1>
+                    <p className="text-text-secondary max-w-2xl mx-auto">
+                        Academic papers, journals, and book chapters. Highlighting publications in biomedical informatics, computer vision, and machine learning.
                     </p>
                 </motion.div>
 
-                {/* Filters */}
-                <motion.div
-                    className="flex flex-wrap justify-center gap-2 mb-12"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                >
-                    {filters.map(filter => (
+                {/* Filter Tabs */}
+                <div className="flex justify-center gap-2 mb-12">
+                    {filters.map((filter) => (
                         <button
                             key={filter}
-                            onClick={() => setActiveFilter(filter)}
-                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${activeFilter === filter
-                                ? 'bg-[var(--brand-primary)] text-white'
-                                : 'bg-[var(--surface)] text-[var(--text-secondary)] border border-[var(--border)] hover:border-[var(--brand-primary)]'
-                                }`}
+                            onClick={() => {
+                                setActiveFilter(filter);
+                                setExpandedIds([]); // collapse when switching tabs
+                            }}
+                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                                activeFilter === filter
+                                    ? 'bg-accent-blue text-white shadow-md'
+                                    : 'bg-bg-secondary text-text-secondary border border-border-default hover:border-accent-blue hover:text-text-primary'
+                            }`}
                         >
                             {filter}
                         </button>
                     ))}
-                </motion.div>
+                </div>
 
-                {/* Loading */}
-                {loading && (
-                    <div className="space-y-6 max-w-4xl mx-auto">
-                        {[1, 2, 3].map((i) => (
-                            <div key={i} className="bg-[var(--surface)] rounded-xl p-6 animate-pulse">
-                                <div className="h-6 bg-[var(--border)] rounded mb-4 w-3/4" />
-                                <div className="h-4 bg-[var(--border)] rounded w-1/2" />
+                {loading ? (
+                    <div className="space-y-8 animate-pulse">
+                        {[1, 2].map((i) => (
+                            <div key={i} className="space-y-3 p-6 bg-bg-card border border-border-light rounded-2xl">
+                                <div className="h-6 bg-border-default rounded w-3/4" />
+                                <div className="h-4 bg-border-default rounded w-1/2" />
                             </div>
                         ))}
                     </div>
-                )}
-
-                {/* Publications List */}
-                {!loading && filteredPublications.length === 0 ? (
-                    <div className="text-center py-16">
-                        <FiBookOpen className="mx-auto text-4xl text-[var(--text-muted)] mb-4" />
-                        <p className="text-[var(--text-secondary)]">No publications found.</p>
+                ) : sortedYears.length === 0 ? (
+                    <div className="text-center py-16 text-text-secondary">
+                        <p className="text-lg">No publications found.</p>
                     </div>
                 ) : (
                     <motion.div
-                        className="space-y-6 max-w-4xl mx-auto"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.5 }}
+                        variants={containerVariants}
+                        initial="hidden"
+                        animate="show"
+                        className="space-y-12"
                     >
-                        {filteredPublications.map((pub, index) => (
-                            <motion.div
-                                key={pub.id}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.4, delay: index * 0.1 }}
-                            >
-                                <Card hover className="relative">
-                                    {/* Status & Year */}
-                                    <div className="flex items-center gap-3 mb-3 flex-wrap">
-                                        {getStatusBadge(pub.status)}
-                                        <span className="text-sm text-[var(--text-muted)]">{pub.year}</span>
-                                    </div>
+                        {sortedYears.map((year) => (
+                            <div key={year} className="space-y-6">
+                                {/* Year Header with Gradient Line */}
+                                <div className="flex items-center gap-4">
+                                    <h2 className="text-2xl font-bold text-accent-blue font-display">{year}</h2>
+                                    <div className="flex-1 h-[1px] bg-gradient-to-r from-accent-blue/40 to-transparent" />
+                                </div>
 
-                                    {/* Title */}
-                                    <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">
-                                        {pub.title}
-                                    </h3>
+                                <div className="space-y-6">
+                                    {publicationsByYear[year].map((pub) => {
+                                        const isExpanded = expandedIds.includes(pub.id);
+                                        return (
+                                            <motion.div key={pub.id} variants={itemVariants}>
+                                                <Card className="p-6 bg-bg-card border-border-light card-premium flex flex-col gap-4">
+                                                    {/* Header: Title and Status */}
+                                                    <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                                                        <div className="space-y-1">
+                                                            <h3 className="text-lg font-bold text-text-primary leading-snug">
+                                                                {pub.title}
+                                                            </h3>
+                                                            <div className="text-sm text-text-secondary">
+                                                                {highlightAuthor(pub.authors)}
+                                                            </div>
+                                                            {pub.journal_or_conference && (
+                                                                <div className="text-sm text-text-muted italic">
+                                                                    {pub.journal_or_conference}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex-shrink-0">
+                                                            {getStatusBadge(pub.status)}
+                                                        </div>
+                                                    </div>
 
-                                    {/* Authors */}
-                                    <p className="text-[var(--text-secondary)] text-sm mb-2">
-                                        {pub.authors && highlightAuthor(pub.authors)}
-                                    </p>
+                                                    {/* Tags list */}
+                                                    {pub.tags && pub.tags.length > 0 && (
+                                                        <div className="flex flex-wrap gap-1.5">
+                                                            {pub.tags.map(tag => (
+                                                                <span key={tag} className="badge badge-blue">
+                                                                    {tag}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    )}
 
-                                    {/* Journal */}
-                                    {pub.journal && (
-                                        <p className="text-[var(--text-muted)] text-sm italic mb-4">
-                                            {pub.journal}
-                                        </p>
-                                    )}
+                                                    {/* Collapsible Abstract */}
+                                                    {pub.abstract && (
+                                                        <div className="border-t border-border-light/50 pt-3">
+                                                            <button
+                                                                onClick={() => toggleExpand(pub.id)}
+                                                                className="flex items-center gap-1.5 text-xs font-semibold text-accent-blue hover:text-accent-cyan transition-colors"
+                                                            >
+                                                                <FiBookOpen size={13} />
+                                                                {isExpanded ? 'Hide Abstract' : 'View Abstract'}
+                                                                {isExpanded ? <FiChevronUp /> : <FiChevronDown />}
+                                                            </button>
 
-                                    {/* Contributions */}
-                                    {pub.contributions && pub.contributions.length > 0 && (
-                                        <div className="mb-4 p-4 rounded-lg bg-[var(--surface)]">
-                                            <p className="text-sm font-semibold text-[var(--text-primary)] mb-2">
-                                                Key Contributions:
-                                            </p>
-                                            <ul className="space-y-1">
-                                                {pub.contributions.map((c, idx) => (
-                                                    <li key={idx} className="text-sm text-[var(--text-secondary)] flex items-start gap-2">
-                                                        <span className="w-1.5 h-1.5 rounded-full bg-[var(--brand-primary)] mt-2 flex-shrink-0" />
-                                                        {c}
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </div>
-                                    )}
+                                                            <AnimatePresence initial={false}>
+                                                                {isExpanded && (
+                                                                    <motion.div
+                                                                        initial={{ height: 0, opacity: 0 }}
+                                                                        animate={{ height: 'auto', opacity: 1 }}
+                                                                        exit={{ height: 0, opacity: 0 }}
+                                                                        transition={{ duration: 0.2 }}
+                                                                        className="overflow-hidden"
+                                                                    >
+                                                                        <p className="mt-3 text-sm text-text-secondary leading-relaxed pl-4 border-l-2 border-accent-blue/30 bg-bg-secondary/40 p-3 rounded-r-lg">
+                                                                            {pub.abstract}
+                                                                        </p>
+                                                                    </motion.div>
+                                                                )}
+                                                            </AnimatePresence>
+                                                        </div>
+                                                    )}
 
-                                    {/* Abstract Toggle */}
-                                    {pub.abstract && (
-                                        <div className="mb-4">
-                                            <button
-                                                onClick={() => setExpandedId(expandedId === pub.id ? null : pub.id)}
-                                                className="text-[var(--brand-primary)] text-sm hover:underline"
-                                            >
-                                                {expandedId === pub.id ? 'Hide Abstract ▲' : 'Show Abstract ▼'}
-                                            </button>
-                                            {expandedId === pub.id && (
-                                                <motion.p
-                                                    initial={{ opacity: 0, height: 0 }}
-                                                    animate={{ opacity: 1, height: 'auto' }}
-                                                    className="mt-3 text-sm text-[var(--text-secondary)] bg-[var(--surface)] p-4 rounded-lg"
-                                                >
-                                                    {pub.abstract}
-                                                </motion.p>
-                                            )}
-                                        </div>
-                                    )}
+                                                    {/* Bottom Panel: Actions and Citations */}
+                                                    <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-border-light/50 mt-2">
+                                                        <div className="flex items-center gap-3">
+                                                            {pub.doi && (
+                                                                <a
+                                                                    href={`https://doi.org/${pub.doi}`}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="px-3 py-1.5 text-xs font-semibold text-text-secondary bg-bg-secondary border border-border-default rounded hover:bg-bg-card-hover hover:text-text-primary transition-all flex items-center gap-1.5"
+                                                                >
+                                                                    <FiExternalLink size={12} />
+                                                                    DOI
+                                                                </a>
+                                                            )}
+                                                            {pub.pdf_url && (
+                                                                <a
+                                                                    href={pub.pdf_url}
+                                                                    download
+                                                                    className="px-3 py-1.5 text-xs font-semibold text-white bg-gradient-to-r from-accent-blue to-accent-cyan rounded hover:opacity-90 transition-all flex items-center gap-1.5"
+                                                                >
+                                                                    <FiFileText size={12} />
+                                                                    Download PDF
+                                                                </a>
+                                                            )}
+                                                        </div>
 
-                                    {/* Links */}
-                                    <div className="flex flex-wrap gap-4 pt-2 border-t border-[var(--border)]">
-                                        {pub.pdf_url && (
-                                            <a
-                                                href={pub.pdf_url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="inline-flex items-center gap-1.5 text-sm text-[var(--brand-primary)] hover:underline"
-                                            >
-                                                <FiFileText size={14} /> PDF
-                                            </a>
-                                        )}
-                                        {pub.doi_link && (
-                                            <a
-                                                href={pub.doi_link}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="inline-flex items-center gap-1.5 text-sm text-[var(--brand-primary)] hover:underline"
-                                            >
-                                                <FiExternalLink size={14} /> DOI
-                                            </a>
-                                        )}
-                                        {pub.code_repo && (
-                                            <a
-                                                href={pub.code_repo}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="inline-flex items-center gap-1.5 text-sm text-[var(--brand-primary)] hover:underline"
-                                            >
-                                                <FiCode size={14} /> Code
-                                            </a>
-                                        )}
-                                        <button
-                                            onClick={() => handleCopyCitation(pub)}
-                                            className="inline-flex items-center gap-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
-                                        >
-                                            {copiedId === pub.id ? (
-                                                <><FiCheck className="text-emerald-500" /> Copied!</>
-                                            ) : (
-                                                <><FiCopy size={14} /> Cite</>
-                                            )}
-                                        </button>
-                                    </div>
-                                </Card>
-                            </motion.div>
+                                                        {pub.citation_count > 0 && (
+                                                            <div className="text-xs font-bold text-text-muted bg-bg-secondary px-3 py-1.5 rounded-full border border-border-default">
+                                                                Cited by {pub.citation_count}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </Card>
+                                            </motion.div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
                         ))}
                     </motion.div>
                 )}

@@ -1,0 +1,91 @@
+cat > src/app/api/portfolio/route.ts << 'EOF'
+import { NextResponse } from 'next/server';
+import { neon } from '@neondatabase/serverless';
+
+const sql = neon(process.env.NEXT_PUBLIC_DATABASE_URL!);
+
+type Row = Record<string, unknown>;
+
+export async function GET() {
+    try {
+        // Fetch all settings
+        const settingsRows = await sql`SELECT key, value FROM settings`;
+        const settings: Record<string, string> = {};
+        settingsRows.forEach((row: Row) => {
+            settings[row.key as string] = row.value as string;
+        });
+
+        // Fetch featured projects
+        let projects: Row[] = [];
+        try {
+            projects = await sql`
+                SELECT id, title, slug, description, tags, 
+                       tech_stack, is_gated, is_featured, 
+                       thumbnail_url, github_url, demo_url
+                FROM projects
+                WHERE is_featured = true
+                ORDER BY created_at DESC
+                LIMIT 6
+            `;
+        } catch (e) {
+            console.error('Projects fetch error:', e);
+        }
+
+        // Fetch certifications
+        let certifications: Row[] = [];
+        try {
+            certifications = await sql`
+                SELECT id, title, issuer, year, 
+                       credential_url, image_url, description
+                FROM certifications
+                ORDER BY display_order ASC, year DESC
+            `;
+        } catch (e) {
+            console.error('Certifications fetch error:', e);
+        }
+
+        // Fetch experience
+        let experience: Row[] = [];
+        try {
+            experience = await sql`
+                SELECT id, title, organization, location, type,
+                       start_date, end_date, is_current, 
+                       description, skills, logo_url
+                FROM experience
+                ORDER BY start_date DESC
+            `;
+        } catch (e) {
+            console.error('Experience fetch error:', e);
+        }
+
+        // Fetch publications
+        let publications: Row[] = [];
+        try {
+            publications = await sql`
+                SELECT id, title, authors, journal_or_conference,
+                       year, doi, abstract, status, 
+                       citation_count, tags
+                FROM publications
+                ORDER BY year DESC
+            `;
+        } catch (e) {
+            console.error('Publications fetch error:', e);
+        }
+
+        return NextResponse.json({
+            settings,
+            projects,
+            certifications,
+            experience,
+            publications,
+        });
+
+    } catch (error) {
+        console.error('Portfolio API error:', error);
+        return NextResponse.json(
+            { error: 'Failed to fetch portfolio data' },
+            { status: 500 }
+        );
+    }
+}
+EOF

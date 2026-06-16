@@ -1,71 +1,73 @@
 import { NextResponse } from 'next/server';
 import { neon } from '@neondatabase/serverless';
 
-const sql = neon(process.env.NEXT_PUBLIC_DATABASE_URL || '');
+const sql = neon(process.env.NEXT_PUBLIC_DATABASE_URL!);
 
-// Public API: Returns portfolio data from the database
-// Used by the public pages (homepage, about) to display dynamic admin-managed content
+type Row = Record<string, unknown>;
+
 export async function GET() {
     try {
-        // Fetch all settings
-        const settings = await sql`SELECT key, value FROM site_settings`;
-        const parsed: Record<string, any> = {};
-        settings.forEach(row => {
-            try {
-                parsed[row.key] = JSON.parse(row.value);
-            } catch {
-                parsed[row.key] = row.value;
-            }
+        const settingsRows = await sql`SELECT key, value FROM settings`;
+        const settings: Record<string, string> = {};
+        settingsRows.forEach((row: Row) => {
+            settings[row.key as string] = row.value as string;
         });
 
-        // Fetch featured projects
-        const projects = await sql`
-            SELECT id, title, slug, short_description, tags, images, visibility, is_featured
-            FROM projects 
-            WHERE is_featured = true 
-            ORDER BY created_at DESC 
-            LIMIT 6
-        `;
+        let projects: Row[] = [];
+        try {
+            projects = await sql`
+                SELECT id, title, slug, description, tags, 
+                       tech_stack, is_gated, is_featured, 
+                       thumbnail_url, github_url, demo_url
+                FROM projects
+                WHERE is_featured = true
+                ORDER BY created_at DESC
+                LIMIT 6
+            `;
+        } catch (e) { console.error('Projects error:', e); }
 
-        // If no featured projects, get the latest ones
-        const allProjects = projects.length > 0 ? projects : await sql`
-            SELECT id, title, slug, short_description, tags, images, visibility, is_featured
-            FROM projects 
-            ORDER BY created_at DESC 
-            LIMIT 6
-        `;
-
-        // Fetch certifications (isolated so it can't crash the rest)
-        let certifications: any[] = [];
+        let certifications: Row[] = [];
         try {
             certifications = await sql`
-                SELECT id, title, issuer, 
-                       date_issued,
-                       credential_url,
-                       image_url,
-                       description
-                FROM certifications 
-                ORDER BY created_at DESC
+                SELECT id, title, issuer, year, 
+                       credential_url, image_url, description
+                FROM certifications
+                ORDER BY display_order ASC, year DESC
             `;
-        } catch (certErr: any) {
-            console.error('Certifications fetch error:', certErr?.message);
-        }
+        } catch (e) { console.error('Certifications error:', e); }
+
+        let experience: Row[] = [];
+        try {
+            experience = await sql`
+                SELECT id, title, organization, location, type,
+                       start_date, end_date, is_current, 
+                       description, skills, logo_url
+                FROM experience
+                ORDER BY start_date DESC
+            `;
+        } catch (e) { console.error('Experience error:', e); }
+
+        let publications: Row[] = [];
+        try {
+            publications = await sql`
+                SELECT id, title, authors, journal_or_conference,
+                       year, doi, abstract, status, 
+                       citation_count, tags
+                FROM publications
+                ORDER BY year DESC
+            `;
+        } catch (e) { console.error('Publications error:', e); }
 
         return NextResponse.json({
-            profile: parsed.profile || null,
-            about: parsed.about || null,
-            social: parsed.social || null,
-            projects: allProjects,
-            certifications,
+            settings, projects, certifications, 
+            experience, publications,
         });
-    } catch (error: any) {
+
+    } catch (error) {
         console.error('Portfolio API error:', error);
-        return NextResponse.json({
-            profile: null,
-            about: null,
-            social: null,
-            projects: [],
-            certifications: [],
-        });
+        return NextResponse.json(
+            { error: 'Failed to fetch portfolio data' },
+            { status: 500 }
+        );
     }
 }
