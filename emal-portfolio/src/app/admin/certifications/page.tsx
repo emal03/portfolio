@@ -13,7 +13,7 @@ interface Certification {
     issuer: string;
     description: string;
     image_url: string;
-    certificate_url: string;
+    credential_url: string;
     issue_date: string;
     created_at: string;
 }
@@ -26,7 +26,7 @@ const sampleCertifications: Certification[] = [
         issuer: 'Google',
         description: 'Professional certification demonstrating proficiency in using TensorFlow to solve deep learning and ML problems.',
         image_url: '/certifications/tensorflow.png',
-        certificate_url: 'https://www.credential.net/example',
+        credential_url: 'https://www.credential.net/example',
         issue_date: '2024-06-15',
         created_at: '2024-06-15',
     },
@@ -36,7 +36,7 @@ const sampleCertifications: Certification[] = [
         issuer: 'Amazon Web Services',
         description: 'Validates expertise in building, training, tuning, and deploying machine learning models on AWS.',
         image_url: '/certifications/aws-ml.png',
-        certificate_url: 'https://aws.amazon.com/certification',
+        credential_url: 'https://aws.amazon.com/certification',
         issue_date: '2024-03-20',
         created_at: '2024-03-20',
     },
@@ -46,7 +46,7 @@ const sampleCertifications: Certification[] = [
         issuer: 'Coursera - DeepLearning.AI',
         description: 'Five-course specialization covering neural networks, CNNs, RNNs, and sequence models.',
         image_url: '/certifications/deeplearning.png',
-        certificate_url: 'https://coursera.org/verify/specialization',
+        credential_url: 'https://coursera.org/verify/specialization',
         issue_date: '2023-11-10',
         created_at: '2023-11-10',
     },
@@ -210,9 +210,9 @@ export default function AdminCertificationsPage() {
                                         >
                                             <FiTrash2 size={18} />
                                         </button>
-                                        {cert.certificate_url && (
+                                        {cert.credential_url && (
                                             <a
-                                                href={cert.certificate_url}
+                                                href={cert.credential_url}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="p-3 bg-white rounded-full text-gray-800 hover:bg-green-500 hover:text-white transition"

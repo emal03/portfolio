@@ -20,7 +20,7 @@ export default function AddCertificationPage() {
         issuer: '',
         description: '',
         image_url: '',
-        certificate_url: '',
+        credential_url: '',
         issue_date: new Date().toISOString().split('T')[0],
     });
 
@@ -99,7 +99,7 @@ export default function AddCertificationPage() {
                     issuer: formData.issuer.trim(),
                     description: formData.description.trim() || null,
                     image_url: imageUrl,
-                    certificate_url: formData.certificate_url.trim() || null,
+                    credential_url: formData.credential_url.trim() || null,
                     issue_date: formData.issue_date,
                 }])
                 .select()
@@ -237,8 +237,8 @@ export default function AddCertificationPage() {
                                 <label className="block font-medium mb-2">Certificate URL</label>
                                 <input
                                     className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                                    value={formData.certificate_url}
-                                    onChange={e => setFormData({ ...formData, certificate_url: e.target.value })}
+                                    value={formData.credential_url}
+                                    onChange={e => setFormData({ ...formData, credential_url: e.target.value })}
                                     placeholder="https://credential.net/verify/..."
                                 />
                             </div>

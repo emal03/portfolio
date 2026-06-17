@@ -24,7 +24,7 @@ export default function EditCertificationPage() {
         issuer: '',
         description: '',
         image_url: '',
-        certificate_url: '',
+        credential_url: '',
         issue_date: '',
     });
 
@@ -46,7 +46,7 @@ export default function EditCertificationPage() {
                     issuer: data.issuer || '',
                     description: data.description || '',
                     image_url: data.image_url || '',
-                    certificate_url: data.certificate_url || '',
+                    credential_url: data.credential_url || '',
                     issue_date: data.issue_date || '',
                 });
                 if (data.image_url) {
@@ -131,7 +131,7 @@ export default function EditCertificationPage() {
                     issuer: formData.issuer.trim(),
                     description: formData.description.trim() || null,
                     image_url: imageUrl,
-                    certificate_url: formData.certificate_url.trim() || null,
+                    credential_url: formData.credential_url.trim() || null,
                     issue_date: formData.issue_date,
                 })
                 .eq('id', certId);
@@ -275,8 +275,8 @@ export default function EditCertificationPage() {
                                 <label className="block font-medium mb-2">Certificate URL</label>
                                 <input
                                     className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900"
-                                    value={formData.certificate_url}
-                                    onChange={e => setFormData({ ...formData, certificate_url: e.target.value })}
+                                    value={formData.credential_url}
+                                    onChange={e => setFormData({ ...formData, credential_url: e.target.value })}
                                 />
                             </div>
                         </div>
