@@ -68,6 +68,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     <Link href="/admin/certifications" className={`flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-colors ${pathname?.startsWith('/admin/certifications') ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'}`}>
                         <FiAward /> Certifications
                     </Link>
+                    <Link href="/admin/homepage" className={`flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-colors ${pathname?.startsWith('/admin/homepage') ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'}`}>
+                        <FiHome /> Homepage
+                    </Link>
+                    <Link href="/admin/skills" className={`flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-colors ${pathname?.startsWith('/admin/skills') ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'}`}>
+                        <FiEdit3 /> Skills
+                    </Link>
+                    <Link href="/admin/experience" className={`flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-colors ${pathname?.startsWith('/admin/experience') ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'}`}>
+                        <FiGrid /> Experience
+                    </Link>
                     <Link href="/admin/blog" className={`flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-colors ${pathname?.startsWith('/admin/blog') ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50'}`}>
                         <FiEdit3 /> Blog
                     </Link>
@@ -99,6 +108,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                 <Link href="/admin/projects" onClick={() => setIsSidebarOpen(false)} className="flex items-center gap-3 text-lg font-medium text-gray-600"><FiFileText /> Projects</Link>
                                 <Link href="/admin/publications" onClick={() => setIsSidebarOpen(false)} className="flex items-center gap-3 text-lg font-medium text-gray-600"><FiBook /> Publications</Link>
                                 <Link href="/admin/certifications" onClick={() => setIsSidebarOpen(false)} className="flex items-center gap-3 text-lg font-medium text-gray-600"><FiAward /> Certifications</Link>
+                                <Link href="/admin/homepage" onClick={() => setIsSidebarOpen(false)} className="flex items-center gap-3 text-lg font-medium text-gray-600"><FiHome /> Homepage</Link>
+                                <Link href="/admin/skills" onClick={() => setIsSidebarOpen(false)} className="flex items-center gap-3 text-lg font-medium text-gray-600"><FiEdit3 /> Skills</Link>
+                                <Link href="/admin/experience" onClick={() => setIsSidebarOpen(false)} className="flex items-center gap-3 text-lg font-medium text-gray-600"><FiGrid /> Experience</Link>
                                 <Link href="/admin/blog" onClick={() => setIsSidebarOpen(false)} className="flex items-center gap-3 text-lg font-medium text-gray-600"><FiEdit3 /> Blog</Link>
                                 <Link href="/admin/messages" onClick={() => setIsSidebarOpen(false)} className="flex items-center gap-3 text-lg font-medium text-gray-600"><FiMail /> Messages</Link>
                                 <Link href="/admin/access-requests" onClick={() => setIsSidebarOpen(false)} className="flex items-center gap-3 text-lg font-medium text-gray-600"><FiLock /> Access Requests</Link>
