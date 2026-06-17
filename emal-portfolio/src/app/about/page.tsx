@@ -1,5 +1,4 @@
 export const dynamic = "force-dynamic";
-import Image from "next/image";
 import Link from "next/link";
 import { neon } from "@neondatabase/serverless";
 
@@ -56,8 +55,9 @@ export default async function AboutPage() {
             <div className="relative flex-shrink-0">
               <div className="w-48 h-48 rounded-2xl overflow-hidden border-2"
                    style={{ borderColor: "var(--accent-blue)", boxShadow: "0 0 40px rgba(59,130,246,0.3)" }}>
-                <Image src={profileImg} alt={name} width={192} height={192}
-                       className="w-full h-full object-cover" priority unoptimized />
+                <img src={profileImg} alt={name}
+                     className="w-full h-full object-cover"
+                     style={{ objectFit: "cover" }} />
               </div>
               <div className="absolute -bottom-3 -right-3 px-3 py-1 rounded-full text-xs font-semibold"
                    style={{ background: "var(--accent-gradient)", color: "white" }}>
